@@ -6,6 +6,7 @@ import { LeaderPanel } from '@/components/team/leader-panel';
 import Image from 'next/image';
 import type { Team } from '@/types/database';
 import { resolveAuthenticatedUserState } from '@/lib/user-state';
+import { Card } from '@/components/ui/card';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,6 +16,9 @@ interface TeamPageMember {
   profiles: {
     name: string;
     phone_number?: string;
+    linkedin_url?: string | null;
+    github_url?: string | null;
+    x_url?: string | null;
     primary_role: string;
     macro_role: string;
     seniority: string;
@@ -48,10 +52,40 @@ export default async function TeamPage({
     .eq('status', 'active');
 
   const memberUserIds = (rawMembers ?? []).map((m) => m.user_id);
-  const { data: profiles } = await db
+  let profiles:
+    | Array<{
+        user_id: string;
+        name: string;
+        phone_number?: string | null;
+        linkedin_url?: string | null;
+        github_url?: string | null;
+        x_url?: string | null;
+        primary_role: string;
+        macro_role: string;
+        seniority: string;
+      }>
+    | null = null;
+
+  const profilesWithSocials = await db
     .from('profiles')
-    .select('user_id, name, phone_number, primary_role, macro_role, seniority')
+    .select('user_id, name, phone_number, linkedin_url, github_url, x_url, primary_role, macro_role, seniority')
     .in('user_id', memberUserIds);
+
+  if (profilesWithSocials.error) {
+    const profilesWithoutSocials = await db
+      .from('profiles')
+      .select('user_id, name, phone_number, primary_role, macro_role, seniority')
+      .in('user_id', memberUserIds);
+
+    profiles = (profilesWithoutSocials.data ?? []).map((profile) => ({
+      ...profile,
+      linkedin_url: null,
+      github_url: null,
+      x_url: null,
+    }));
+  } else {
+    profiles = profilesWithSocials.data;
+  }
 
   const profileMap = new Map((profiles ?? []).map((p) => [p.user_id, p]));
   const members = (rawMembers ?? []).map((m) => ({
@@ -59,6 +93,9 @@ export default async function TeamPage({
     profiles: profileMap.get(m.user_id) ?? {
       name: 'Unknown',
       phone_number: null,
+      linkedin_url: null,
+      github_url: null,
+      x_url: null,
       primary_role: m.specific_role,
       macro_role: m.macro_role,
       seniority: 'mid',
@@ -76,40 +113,119 @@ export default async function TeamPage({
   };
 
   return (
-    <main className="flex min-h-screen flex-col items-center px-4 py-8">
-      <div className="w-full max-w-md space-y-6">
-        <div className="text-center">
-          <Image src="/brand/logo/symbol.svg" alt="" width={40} height={40} className="mx-auto" />
-          <h1 className="mt-3 font-heading text-2xl font-bold">{resolvedState.team.name}</h1>
-          <span className="mt-1 inline-block rounded-full bg-brand-green/20 px-3 py-0.5 text-xs text-brand-off-white/60">
-            {STATUS_LABELS[resolvedState.team.status] ?? resolvedState.team.status}
-          </span>
-        </div>
+    <main className="relative min-h-screen overflow-hidden px-4 py-8 sm:px-6 lg:px-8">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute inset-x-0 top-0 h-[30rem] bg-[radial-gradient(circle_at_top,rgba(0,139,76,0.18),transparent_42%),radial-gradient(circle_at_80%_18%,rgba(255,210,63,0.10),transparent_26%),linear-gradient(180deg,#1b231d_0%,#162018_50%,#1b231d_100%)]" />
+        <Image src="/brand/elements/morth-05.svg" alt="" width={320} height={320} className="absolute -left-12 top-24 opacity-12" />
+        <Image src="/brand/elements/morth-14.svg" alt="" width={220} height={220} className="absolute bottom-8 right-6 opacity-10" />
+      </div>
 
-        <div className="space-y-3">
-          <h2 className="font-heading text-sm font-semibold text-brand-off-white/60">Membros</h2>
-          {(members as TeamPageMember[] | null)?.map((member) => (
-            <MemberCard key={member.id}
-              name={member.profiles.name}
-              specificRole={member.profiles.primary_role}
-              macroRole={member.profiles.macro_role}
-              seniority={member.profiles.seniority}
-              isLeader={member.is_leader}
-              phoneNumber={member.profiles.phone_number}
-              showPhone />
-          ))}
-        </div>
+      <div className="relative z-10 mx-auto w-full max-w-6xl space-y-8">
+        <section className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr] lg:items-start">
+          <Card className="rounded-[2rem] border-brand-green/30 bg-[linear-gradient(180deg,rgba(27,35,29,0.96),rgba(27,35,29,0.72))] p-6 sm:p-7">
+            <Image src="/brand/logo/symbol.svg" alt="" width={42} height={42} className="opacity-90" />
+            <div className="mt-5 flex flex-wrap items-center gap-3">
+              <span className="rounded-full border border-brand-emerald/22 bg-brand-emerald/12 px-3 py-1 text-xs uppercase tracking-[0.16em] text-brand-emerald">
+                {STATUS_LABELS[resolvedState.team.status] ?? resolvedState.team.status}
+              </span>
+              <span className="rounded-full border border-brand-green/24 bg-brand-green/10 px-3 py-1 text-xs uppercase tracking-[0.16em] text-brand-off-white/62">
+                {members.length} membros
+              </span>
+            </div>
+            <h1 className="mt-5 font-heading text-4xl font-bold leading-[0.96] tracking-tight text-brand-off-white sm:text-5xl">
+              {resolvedState.team.name}
+            </h1>
+            <p className="mt-4 max-w-xl text-base leading-8 text-brand-off-white/70">
+              Esse e o espaco do time para se organizar, escolher a direcao e
+              destravar o primeiro passo juntos.
+            </p>
+          </Card>
 
-        {!hasLeader && <ClaimLeaderButton teamId={teamId} />}
-        {isLeader && <LeaderPanel team={resolvedState.team as Team} />}
+          <Card className="rounded-[2rem] border-brand-yellow/22 bg-[linear-gradient(135deg,rgba(255,210,63,0.08),rgba(27,35,29,0.96))] p-6 sm:p-7">
+            <p className="text-xs uppercase tracking-[0.18em] text-brand-yellow/82">
+              Contexto do time
+            </p>
+            {resolvedState.team.idea_title ? (
+              <>
+                <h2 className="mt-4 font-heading text-2xl font-semibold text-brand-off-white">
+                  {resolvedState.team.idea_title}
+                </h2>
+                {resolvedState.team.idea_description && (
+                  <p className="mt-3 text-sm leading-7 text-brand-off-white/72">
+                    {resolvedState.team.idea_description}
+                  </p>
+                )}
+                {resolvedState.team.project_category && (
+                  <p className="mt-4 text-xs uppercase tracking-[0.16em] text-brand-yellow/76">
+                    Categoria: {resolvedState.team.project_category}
+                  </p>
+                )}
+              </>
+            ) : (
+              <>
+                <h2 className="mt-4 font-heading text-2xl font-semibold text-brand-off-white">
+                  A ideia ainda nao foi definida.
+                </h2>
+                <p className="mt-3 text-sm leading-7 text-brand-off-white/70">
+                  Usem esse momento para alinhar o problema, o formato do demo e
+                  o recorte inicial que faz mais sentido para o time.
+                </p>
+              </>
+            )}
+          </Card>
+        </section>
 
-        {resolvedState.team.idea_title && !isLeader && (
-          <div className="rounded-lg border border-brand-green/30 p-4">
-            <h3 className="font-heading text-sm font-semibold text-brand-off-white/60">Ideia do projeto</h3>
-            <p className="mt-1 font-heading font-semibold">{resolvedState.team.idea_title}</p>
-            {resolvedState.team.idea_description && <p className="mt-1 text-sm text-brand-off-white/70">{resolvedState.team.idea_description}</p>}
+        <section className="grid gap-8 lg:grid-cols-[1.08fr_0.92fr] lg:items-start">
+          <div className="space-y-4">
+            <div>
+              <p className="text-xs uppercase tracking-[0.18em] text-brand-off-white/42">
+                Time
+              </p>
+              <h2 className="mt-2 font-heading text-3xl font-semibold text-brand-off-white">
+                Quem esta com voce nessa rodada
+              </h2>
+            </div>
+
+            <div className="grid gap-3">
+              {(members as TeamPageMember[] | null)?.map((member) => (
+                <MemberCard
+                  key={member.id}
+                  name={member.profiles.name}
+                  specificRole={member.profiles.primary_role}
+                  macroRole={member.profiles.macro_role}
+                  seniority={member.profiles.seniority}
+                  isLeader={member.is_leader}
+                  phoneNumber={member.profiles.phone_number}
+                  linkedinUrl={member.profiles.linkedin_url}
+                  githubUrl={member.profiles.github_url}
+                  xUrl={member.profiles.x_url}
+                  showPhone
+                />
+              ))}
+            </div>
           </div>
-        )}
+
+          <div className="space-y-4">
+            {!hasLeader && <ClaimLeaderButton teamId={teamId} />}
+            {isLeader && <LeaderPanel team={resolvedState.team as Team} />}
+
+            {!isLeader && resolvedState.team.idea_title && (
+              <Card className="rounded-[1.75rem] border-brand-green/24 bg-brand-dark-green/72 p-5">
+                <p className="text-xs uppercase tracking-[0.18em] text-brand-off-white/42">
+                  Direcao atual
+                </p>
+                <h3 className="mt-3 font-heading text-2xl font-semibold text-brand-off-white">
+                  {resolvedState.team.idea_title}
+                </h3>
+                {resolvedState.team.idea_description && (
+                  <p className="mt-3 text-sm leading-7 text-brand-off-white/70">
+                    {resolvedState.team.idea_description}
+                  </p>
+                )}
+              </Card>
+            )}
+          </div>
+        </section>
       </div>
     </main>
   );

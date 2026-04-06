@@ -9,6 +9,9 @@ import { redirect } from 'next/navigation';
 export interface ProfileFormData {
   name: string;
   phone_number: string;
+  linkedin_url: string;
+  github_url: string;
+  x_url: string;
   primary_role: string;
   secondary_roles: string[];
   years_experience: number;
@@ -34,6 +37,9 @@ export async function createProfile(data: ProfileFormData) {
     p_years_experience: data.years_experience,
     p_secondary_roles: data.secondary_roles,
     p_interests: data.interests,
+    p_linkedin_url: data.linkedin_url,
+    p_github_url: data.github_url,
+    p_x_url: data.x_url,
   });
 
   if (error) {

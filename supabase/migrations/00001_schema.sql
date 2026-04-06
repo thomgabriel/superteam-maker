@@ -1,5 +1,5 @@
 -- ============================================
--- SuperTeamMaker — Initial Schema
+-- SuperTeamMaker — Full Schema
 -- ============================================
 
 -- ============================================
@@ -42,6 +42,9 @@ CREATE TABLE profiles (
   ) STORED,
   bio text,
   language text DEFAULT 'pt-BR',
+  linkedin_url text,
+  github_url text,
+  x_url text,
   created_at timestamptz DEFAULT now()
 );
 
@@ -65,6 +68,7 @@ CREATE TABLE matchmaking_pool (
   profile_id uuid NOT NULL REFERENCES profiles(id),
   status text NOT NULL DEFAULT 'waiting' CHECK (status IN ('waiting', 'assigned')),
   round_number int,
+  -- created_at is the canonical "entered_at" used for wait-time scoring: now() - created_at
   created_at timestamptz DEFAULT now(),
   updated_at timestamptz DEFAULT now()
 );
@@ -102,6 +106,58 @@ CREATE TABLE team_members (
   UNIQUE(team_id, user_id)
 );
 
+-- Only one active membership per user at a time
+CREATE UNIQUE INDEX uniq_team_members_active_user
+  ON team_members(user_id)
+  WHERE status = 'active';
+
+CREATE TABLE analytics_events (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  event_name text NOT NULL CHECK (
+    event_name IN (
+      'landing_view',
+      'signup_started',
+      'signup_completed',
+      'profile_completed',
+      'entered_pool',
+      'matched_to_team',
+      'team_reveal_viewed',
+      'leader_claimed',
+      'team_activated',
+      'whatsapp_clicked',
+      'user_replaced'
+    )
+  ),
+  user_id uuid REFERENCES users(id) ON DELETE SET NULL,
+  anonymous_id text,
+  route text,
+  metadata jsonb NOT NULL DEFAULT '{}'::jsonb,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX idx_analytics_events_event_name_created_at
+  ON analytics_events(event_name, created_at DESC);
+
+CREATE INDEX idx_analytics_events_user_id_created_at
+  ON analytics_events(user_id, created_at DESC);
+
+CREATE TABLE matchmaking_runs (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  trigger_source text NOT NULL CHECK (trigger_source IN ('cron', 'admin')),
+  status text NOT NULL CHECK (status IN ('running', 'completed', 'failed')),
+  pool_size int NOT NULL DEFAULT 0,
+  teams_formed int NOT NULL DEFAULT 0,
+  users_matched int NOT NULL DEFAULT 0,
+  replacements_performed int NOT NULL DEFAULT 0,
+  notes text,
+  error_message text,
+  started_at timestamptz NOT NULL DEFAULT now(),
+  finished_at timestamptz
+);
+
+CREATE INDEX idx_matchmaking_runs_started_at
+  ON matchmaking_runs(started_at DESC);
+
 -- ============================================
 -- 2. TRIGGER: Auto-create users row on auth signup
 -- ============================================
@@ -120,90 +176,7 @@ CREATE TRIGGER on_auth_user_created
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
 -- ============================================
--- 3. ROW LEVEL SECURITY
--- ============================================
-
-ALTER TABLE users ENABLE ROW LEVEL SECURITY;
-ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE profile_roles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE profile_interests ENABLE ROW LEVEL SECURITY;
-ALTER TABLE matchmaking_pool ENABLE ROW LEVEL SECURITY;
-ALTER TABLE teams ENABLE ROW LEVEL SECURITY;
-ALTER TABLE team_members ENABLE ROW LEVEL SECURITY;
-ALTER TABLE campaigns ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "campaigns_read" ON campaigns
-  FOR SELECT TO authenticated USING (true);
-
-CREATE POLICY "users_own" ON users
-  FOR ALL TO authenticated USING (auth.uid() = id);
-
-CREATE POLICY "profiles_own" ON profiles
-  FOR ALL TO authenticated USING (auth.uid() = user_id);
-
-CREATE POLICY "profiles_teammate_read" ON profiles
-  FOR SELECT TO authenticated
-  USING (
-    user_id IN (
-      SELECT tm.user_id FROM team_members tm
-      WHERE tm.team_id IN (
-        SELECT team_id FROM team_members WHERE user_id = auth.uid() AND status = 'active'
-      )
-      AND tm.status = 'active'
-    )
-  );
-
-CREATE POLICY "profile_roles_own" ON profile_roles
-  FOR ALL TO authenticated
-  USING (profile_id IN (SELECT id FROM profiles WHERE user_id = auth.uid()));
-
-CREATE POLICY "profile_interests_own" ON profile_interests
-  FOR ALL TO authenticated
-  USING (profile_id IN (SELECT id FROM profiles WHERE user_id = auth.uid()));
-
-CREATE POLICY "pool_own" ON matchmaking_pool
-  FOR ALL TO authenticated USING (auth.uid() = user_id);
-
-CREATE POLICY "teams_member_read" ON teams
-  FOR SELECT TO authenticated
-  USING (id IN (SELECT team_id FROM team_members WHERE user_id = auth.uid() AND status = 'active'));
-
-CREATE POLICY "teams_leader_update" ON teams
-  FOR UPDATE TO authenticated USING (leader_id = auth.uid());
-
-CREATE POLICY "team_members_read" ON team_members
-  FOR SELECT TO authenticated
-  USING (team_id IN (SELECT team_id FROM team_members WHERE user_id = auth.uid() AND status = 'active'));
-
--- ============================================
--- 4. DIAGNOSTIC VIEWS
--- ============================================
-
-CREATE VIEW v_pool_status AS
-  SELECT status, count(*) as total FROM matchmaking_pool GROUP BY status;
-
-CREATE VIEW v_round_summary AS
-  SELECT round_number, count(*) as teams_formed,
-         min(created_at) as round_start, max(created_at) as round_end
-  FROM teams WHERE round_number IS NOT NULL GROUP BY round_number;
-
-CREATE VIEW v_unmatched AS
-  SELECT mp.id, mp.created_at as waiting_since,
-         p.name, p.primary_role, p.macro_role, p.seniority
-  FROM matchmaking_pool mp
-  JOIN profiles p ON p.id = mp.profile_id
-  WHERE mp.status = 'waiting';
-
--- ============================================
--- 5. REALTIME PUBLICATION
--- ============================================
-
-ALTER PUBLICATION supabase_realtime ADD TABLE matchmaking_pool;
-ALTER PUBLICATION supabase_realtime ADD TABLE team_members;
-ALTER PUBLICATION supabase_realtime ADD TABLE teams;
-
--- ============================================
--- 6. RPC: Atomic profile creation + pool entry
+-- 3. RPC: Atomic profile creation + pool entry
 -- ============================================
 
 CREATE OR REPLACE FUNCTION create_profile_and_enter_pool(
@@ -214,13 +187,24 @@ CREATE OR REPLACE FUNCTION create_profile_and_enter_pool(
   p_macro_role text,
   p_years_experience int,
   p_secondary_roles text[],
-  p_interests text[]
+  p_interests text[],
+  p_linkedin_url text DEFAULT NULL,
+  p_github_url text DEFAULT NULL,
+  p_x_url text DEFAULT NULL
 ) RETURNS uuid AS $$
 DECLARE
   v_profile_id uuid;
 BEGIN
-  INSERT INTO profiles (user_id, name, phone_number, primary_role, macro_role, years_experience)
-  VALUES (p_user_id, p_name, p_phone_number, p_primary_role, p_macro_role, p_years_experience)
+  INSERT INTO profiles (
+    user_id, name, phone_number, primary_role, macro_role, years_experience,
+    linkedin_url, github_url, x_url
+  )
+  VALUES (
+    p_user_id, p_name, p_phone_number, p_primary_role, p_macro_role, p_years_experience,
+    NULLIF(trim(p_linkedin_url), ''),
+    NULLIF(trim(p_github_url), ''),
+    NULLIF(trim(p_x_url), '')
+  )
   RETURNING id INTO v_profile_id;
 
   IF array_length(p_secondary_roles, 1) > 0 THEN
@@ -239,3 +223,105 @@ BEGIN
   RETURN v_profile_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- ============================================
+-- 4. ROW LEVEL SECURITY
+-- ============================================
+
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE profile_roles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE profile_interests ENABLE ROW LEVEL SECURITY;
+ALTER TABLE matchmaking_pool ENABLE ROW LEVEL SECURITY;
+ALTER TABLE teams ENABLE ROW LEVEL SECURITY;
+ALTER TABLE team_members ENABLE ROW LEVEL SECURITY;
+ALTER TABLE campaigns ENABLE ROW LEVEL SECURITY;
+ALTER TABLE analytics_events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE matchmaking_runs ENABLE ROW LEVEL SECURITY;
+
+-- Campaigns: readable by all authenticated users
+CREATE POLICY "campaigns_read" ON campaigns
+  FOR SELECT TO authenticated USING (true);
+
+-- Users: own row only
+CREATE POLICY "users_own" ON users
+  FOR ALL TO authenticated USING (auth.uid() = id);
+
+-- Profiles: owner has full access
+CREATE POLICY "profiles_own" ON profiles
+  FOR ALL TO authenticated USING (auth.uid() = user_id);
+
+-- Profiles: teammates can read (for phone number visibility)
+CREATE POLICY "profiles_teammate_read" ON profiles
+  FOR SELECT TO authenticated
+  USING (
+    user_id IN (
+      SELECT tm.user_id FROM team_members tm
+      WHERE tm.team_id IN (
+        SELECT team_id FROM team_members WHERE user_id = auth.uid() AND status = 'active'
+      )
+      AND tm.status = 'active'
+    )
+  );
+
+-- Profile roles: owner access
+CREATE POLICY "profile_roles_own" ON profile_roles
+  FOR ALL TO authenticated
+  USING (profile_id IN (SELECT id FROM profiles WHERE user_id = auth.uid()));
+
+-- Profile interests: owner access
+CREATE POLICY "profile_interests_own" ON profile_interests
+  FOR ALL TO authenticated
+  USING (profile_id IN (SELECT id FROM profiles WHERE user_id = auth.uid()));
+
+-- Matchmaking pool: own entry
+CREATE POLICY "pool_own" ON matchmaking_pool
+  FOR ALL TO authenticated USING (auth.uid() = user_id);
+
+-- Teams: members can read their team
+CREATE POLICY "teams_member_read" ON teams
+  FOR SELECT TO authenticated
+  USING (id IN (SELECT team_id FROM team_members WHERE user_id = auth.uid() AND status = 'active'));
+
+-- Teams: leader can update (name, idea, status)
+CREATE POLICY "teams_leader_update" ON teams
+  FOR UPDATE TO authenticated USING (leader_id = auth.uid());
+
+-- Team members: can read own team's members
+CREATE POLICY "team_members_read" ON team_members
+  FOR SELECT TO authenticated
+  USING (team_id IN (SELECT team_id FROM team_members WHERE user_id = auth.uid() AND status = 'active'));
+
+-- Analytics & matchmaking runs: service_role only (no authenticated reads)
+CREATE POLICY "analytics_events_none" ON analytics_events
+  FOR SELECT TO authenticated USING (false);
+
+CREATE POLICY "matchmaking_runs_none" ON matchmaking_runs
+  FOR SELECT TO authenticated USING (false);
+
+-- ============================================
+-- 5. DIAGNOSTIC VIEWS
+-- ============================================
+
+CREATE VIEW v_pool_status AS
+  SELECT status, count(*) as total FROM matchmaking_pool GROUP BY status;
+
+CREATE VIEW v_round_summary AS
+  SELECT round_number, count(*) as teams_formed,
+         min(created_at) as round_start, max(created_at) as round_end
+  FROM teams WHERE round_number IS NOT NULL GROUP BY round_number;
+
+CREATE VIEW v_unmatched AS
+  SELECT mp.id, mp.created_at as waiting_since,
+         p.name, p.primary_role, p.macro_role, p.seniority
+  FROM matchmaking_pool mp
+  JOIN profiles p ON p.id = mp.profile_id
+  WHERE mp.status = 'waiting';
+
+-- ============================================
+-- 6. REALTIME PUBLICATION
+-- ============================================
+
+ALTER PUBLICATION supabase_realtime ADD TABLE matchmaking_pool;
+ALTER PUBLICATION supabase_realtime ADD TABLE team_members;
+ALTER PUBLICATION supabase_realtime ADD TABLE teams;

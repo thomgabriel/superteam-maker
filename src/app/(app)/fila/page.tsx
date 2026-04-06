@@ -1,30 +1,42 @@
-import { redirect } from 'next/navigation';
-import { QueueStatus } from '@/components/queue/queue-status';
-import Image from 'next/image';
-import { resolveAuthenticatedUserState } from '@/lib/user-state';
+import { redirect } from "next/navigation";
+import { QueueStatus } from "@/components/queue/queue-status";
+import Image from "next/image";
+import { resolveAuthenticatedUserState } from "@/lib/user-state";
+import { TrackPageView } from "@/components/ui/track-event";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 export default async function QueuePage() {
   const resolvedState = await resolveAuthenticatedUserState();
-  if (!resolvedState) redirect('/auth');
-  if (resolvedState.state !== 'waiting_match') {
+  if (!resolvedState) redirect("/auth");
+  if (resolvedState.state !== "waiting_match") {
     redirect(resolvedState.redirectPath);
   }
 
   return (
-    <main className="relative flex min-h-screen flex-col items-center justify-center px-4">
-      <div className="pointer-events-none absolute inset-0 overflow-hidden opacity-5">
+    <main className="relative min-h-screen overflow-hidden px-4 py-8 sm:px-6 lg:px-8">
+      <TrackPageView event="entered_pool" />
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute inset-x-0 top-0 h-[34rem] bg-[radial-gradient(circle_at_top,rgba(0,139,76,0.18),transparent_42%),radial-gradient(circle_at_82%_18%,rgba(255,210,63,0.10),transparent_28%),linear-gradient(180deg,#1b231d_0%,#162018_50%,#1b231d_100%)]" />
         <Image
           src="/brand/elements/morth-09.svg"
           alt=""
           width={300}
           height={300}
-          className="absolute -right-10 top-1/4"
+          className="absolute -right-10 top-1/4 opacity-12"
+        />
+        <Image
+          src="/brand/elements/morth-21.svg"
+          alt=""
+          width={300}
+          height={300}
+          className="absolute -left-12 top-12 opacity-10"
         />
       </div>
 
-      <QueueStatus userId={resolvedState.userId} />
+      <div className="relative z-10 mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-6xl items-start pt-8 sm:pt-16 lg:pt-18">
+        <QueueStatus userId={resolvedState.userId} />
+      </div>
     </main>
   );
 }

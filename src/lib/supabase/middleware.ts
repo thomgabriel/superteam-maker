@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
-const PUBLIC_ROUTES = ['/', '/auth', '/auth/callback'];
+const PUBLIC_ROUTES = ['/', '/auth', '/auth/callback', '/api/matchmaking', '/api/analytics'];
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
@@ -33,20 +33,13 @@ export async function updateSession(request: NextRequest) {
 
   const path = request.nextUrl.pathname;
   const isPublicRoute = PUBLIC_ROUTES.some(
-    (route) => path === route || path.startsWith('/auth/'),
+    (route) => path === route || path.startsWith(route + '/'),
   );
 
   // Unauthenticated users trying to access protected routes -> /auth
   if (!user && !isPublicRoute) {
     const url = request.nextUrl.clone();
     url.pathname = '/auth';
-    return createRedirectWithCookies(url, supabaseResponse);
-  }
-
-  // Authenticated users on /auth -> send to app
-  if (user && path === '/auth') {
-    const url = request.nextUrl.clone();
-    url.pathname = '/perfil'; // perfil will redirect to fila/equipe based on state
     return createRedirectWithCookies(url, supabaseResponse);
   }
 

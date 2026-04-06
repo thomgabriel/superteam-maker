@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { runMatchmakingNow } from '@/app/(app)/admin/actions';
+import { Button } from '@/components/ui/button';
 
 export function RunMatchmakingButton() {
   const router = useRouter();
@@ -18,17 +19,18 @@ export function RunMatchmakingButton() {
   }
 
   return (
-    <div className="space-y-2">
-      <button
+    <div className="space-y-3">
+      <Button
         type="button"
         onClick={handleClick}
         disabled={isPending}
-        className="rounded-lg bg-brand-yellow px-4 py-2 font-heading text-sm font-semibold text-brand-dark-green transition-opacity hover:opacity-90 disabled:opacity-50"
+        variant="secondary"
+        size="lg"
+        fullWidth
       >
         {isPending ? 'Executando...' : 'Rodar matchmaking agora'}
-      </button>
-      {message && <p className="text-sm text-brand-off-white/60">{message}</p>}
+      </Button>
+      {message && <p className="text-sm leading-6 text-brand-off-white/62">{message}</p>}
     </div>
   );
 }
-

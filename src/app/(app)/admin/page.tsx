@@ -1,12 +1,18 @@
-import Link from 'next/link';
-import { redirect } from 'next/navigation';
-import { createServerSupabaseClient, createServiceRoleClient } from '@/lib/supabase/server';
-import { isAdminUser } from '@/lib/admin';
-import { RunMatchmakingButton } from '@/components/admin/run-matchmaking-button';
-import { getUserState } from '@/lib/user-state';
-import type { MatchmakingRun, Team } from '@/types/database';
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import {
+  createServerSupabaseClient,
+  createServiceRoleClient,
+} from "@/lib/supabase/server";
+import { isAdminUser } from "@/lib/admin";
+import { RunMatchmakingButton } from "@/components/admin/run-matchmaking-button";
+import { getUserState } from "@/lib/user-state";
+import type { MatchmakingRun, Team } from "@/types/database";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 interface WaitingUserRow {
   created_at: string;
@@ -27,7 +33,7 @@ interface WaitingUserRow {
 interface TeamSummaryRow {
   id: string;
   name: string;
-  status: Team['status'];
+  status: Team["status"];
   created_at?: string;
   updated_at?: string;
   activation_deadline_at?: string | null;
@@ -76,7 +82,15 @@ function firstItem<T>(value: T | T[] | null | undefined): T | null {
     return null;
   }
 
-  return Array.isArray(value) ? value[0] ?? null : value;
+  return Array.isArray(value) ? (value[0] ?? null) : value;
+}
+
+function formatDateTime(value?: string | null) {
+  if (!value) {
+    return "sem data";
+  }
+
+  return new Date(value).toLocaleString("pt-BR");
 }
 
 async function getDashboardData() {
@@ -91,47 +105,50 @@ async function getDashboardData() {
     { data: recentRuns },
   ] = await Promise.all([
     db
-      .from('matchmaking_pool')
-      .select('*', { count: 'exact', head: true })
-      .eq('status', 'waiting'),
+      .from("matchmaking_pool")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "waiting"),
     db
-      .from('matchmaking_pool')
-      .select(`
+      .from("matchmaking_pool")
+      .select(
+        `
         created_at,
         user_id,
         profiles!inner (name, primary_role, seniority)
-      `)
-      .eq('status', 'waiting')
-      .order('created_at', { ascending: true })
+      `,
+      )
+      .eq("status", "waiting")
+      .order("created_at", { ascending: true })
       .limit(5),
     db
-      .from('teams')
-      .select('id, name, status, created_at, leader_id')
-      .order('created_at', { ascending: false })
+      .from("teams")
+      .select("id, name, status, created_at, leader_id")
+      .order("created_at", { ascending: false })
       .limit(8),
     db
-      .from('teams')
-      .select('id, name, activation_deadline_at')
-      .eq('status', 'pending_activation')
-      .is('leader_id', null)
-      .order('activation_deadline_at', { ascending: true })
+      .from("teams")
+      .select("id, name, activation_deadline_at")
+      .eq("status", "pending_activation")
+      .is("leader_id", null)
+      .order("activation_deadline_at", { ascending: true })
       .limit(8),
     db
-      .from('teams')
-      .select('id, name, updated_at')
-      .eq('status', 'inactive')
-      .order('updated_at', { ascending: false })
+      .from("teams")
+      .select("id, name, updated_at")
+      .eq("status", "inactive")
+      .order("updated_at", { ascending: false })
       .limit(8),
     db
-      .from('matchmaking_runs')
-      .select('*')
-      .order('started_at', { ascending: false })
+      .from("matchmaking_runs")
+      .select("*")
+      .order("started_at", { ascending: false })
       .limit(8),
   ]);
 
   return {
     waitingPoolCount: waitingPoolCount ?? 0,
-    oldestWaitingUsers: (oldestWaitingUsers ?? []) as unknown as WaitingUserRow[],
+    oldestWaitingUsers: (oldestWaitingUsers ??
+      []) as unknown as WaitingUserRow[],
     recentTeams: (recentTeams ?? []) as TeamSummaryRow[],
     pendingTeams: (pendingTeams ?? []) as TeamSummaryRow[],
     inactiveTeams: (inactiveTeams ?? []) as TeamSummaryRow[],
@@ -141,14 +158,28 @@ async function getDashboardData() {
 
 async function inspectUser(userId: string) {
   const db = await createServiceRoleClient();
-  const [{ data: profile }, { data: poolEntry }, { data: teamMember }] = await Promise.all([
-    db.from('profiles').select('*').eq('user_id', userId).maybeSingle(),
-    db.from('matchmaking_pool').select('*').eq('user_id', userId).maybeSingle(),
-    db.from('team_members').select('*').eq('user_id', userId).eq('status', 'active').maybeSingle(),
-  ]);
+  const [{ data: profile }, { data: poolEntry }, { data: teamMember }] =
+    await Promise.all([
+      db.from("profiles").select("*").eq("user_id", userId).maybeSingle(),
+      db
+        .from("matchmaking_pool")
+        .select("*")
+        .eq("user_id", userId)
+        .maybeSingle(),
+      db
+        .from("team_members")
+        .select("*")
+        .eq("user_id", userId)
+        .eq("status", "active")
+        .maybeSingle(),
+    ]);
 
   const team = teamMember
-    ? await db.from('teams').select('*').eq('id', teamMember.team_id).maybeSingle()
+    ? await db
+        .from("teams")
+        .select("*")
+        .eq("id", teamMember.team_id)
+        .maybeSingle()
     : { data: null };
 
   return {
@@ -156,22 +187,32 @@ async function inspectUser(userId: string) {
     poolEntry,
     teamMember,
     team: team.data,
-    state: getUserState(profile ?? null, poolEntry ?? null, teamMember ?? null, team.data ?? null),
+    state: getUserState(
+      profile ?? null,
+      poolEntry ?? null,
+      teamMember ?? null,
+      team.data ?? null,
+    ),
   };
 }
 
 async function inspectTeam(teamId: string) {
   const db = await createServiceRoleClient();
   const [{ data: team }, { data: members }] = await Promise.all([
-    db.from('teams').select('*').eq('id', teamId).maybeSingle(),
+    db.from("teams").select("*").eq("id", teamId).maybeSingle(),
     db
-      .from('team_members')
-      .select(`id, is_leader, status, profiles:user_id (name, primary_role, seniority)`)
-      .eq('team_id', teamId)
-      .order('joined_at', { ascending: true }),
+      .from("team_members")
+      .select(
+        `id, is_leader, status, profiles:user_id (name, primary_role, seniority)`,
+      )
+      .eq("team_id", teamId)
+      .order("joined_at", { ascending: true }),
   ]);
 
-  return { team, members: (members ?? []) as unknown as TeamInspectionMember[] };
+  return {
+    team,
+    members: (members ?? []) as unknown as TeamInspectionMember[],
+  };
 }
 
 export default async function AdminPage({
@@ -185,11 +226,11 @@ export default async function AdminPage({
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect('/auth');
+    redirect("/auth");
   }
 
   if (!isAdminUser(user)) {
-    redirect('/fila');
+    redirect("/fila");
   }
 
   const [{ userId, teamId }, dashboard] = await Promise.all([
@@ -219,176 +260,348 @@ export default async function AdminPage({
   }
 
   return (
-    <main className="min-h-screen px-4 py-8">
-      <div className="mx-auto max-w-5xl space-y-8">
-        <div className="flex flex-col gap-4 rounded-2xl border border-brand-green/30 p-6 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="font-heading text-3xl font-bold">Operações</h1>
-            <p className="mt-1 text-sm text-brand-off-white/60">
-              Painel interno para acompanhar pool, times e execuções de matchmaking.
+    <main className="relative min-h-screen overflow-hidden px-4 py-8 sm:px-6 lg:px-8">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute inset-x-0 top-0 h-[30rem] bg-[radial-gradient(circle_at_top,rgba(255,210,63,0.10),transparent_40%),radial-gradient(circle_at_18%_20%,rgba(0,139,76,0.18),transparent_28%),linear-gradient(180deg,#1b231d_0%,#162018_48%,#1b231d_100%)]" />
+      </div>
+
+      <div className="relative z-10 mx-auto max-w-6xl space-y-8">
+        <section className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-start">
+          <Card className="rounded-[2rem] border-brand-green/30 bg-[linear-gradient(180deg,rgba(27,35,29,0.96),rgba(27,35,29,0.74))] p-6 sm:p-7">
+            <p className="inline-flex rounded-full border border-brand-yellow/30 bg-brand-yellow/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-brand-yellow">
+              Operacoes internas
             </p>
-          </div>
-          <div className="flex flex-col items-start gap-3">
-            <RunMatchmakingButton />
-            <Link href="/admin" className="text-sm text-brand-emerald hover:underline">
-              Atualizar painel
-            </Link>
-          </div>
-        </div>
+            <h1 className="mt-5 font-heading text-4xl font-bold leading-[0.96] tracking-tight sm:text-5xl">
+              Painel para acompanhar
+              <span className="block text-brand-emerald">fila, times e rodadas</span>
+            </h1>
+            <p className="mt-5 max-w-2xl text-base leading-8 text-brand-off-white/70">
+              Aqui a leitura precisa ser rapida: quantas pessoas estao esperando,
+              como os times estao saindo e o que aconteceu nas ultimas execucoes
+              de matchmaking.
+            </p>
+          </Card>
+
+          <Card className="rounded-[2rem] border-brand-yellow/24 bg-[linear-gradient(135deg,rgba(255,210,63,0.10),rgba(27,35,29,0.96))] p-6 sm:p-7">
+            <p className="text-xs uppercase tracking-[0.18em] text-brand-yellow/82">
+              Acoes
+            </p>
+            <h2 className="mt-3 font-heading text-2xl font-semibold">
+              Disparar rodada e recarregar leitura.
+            </h2>
+            <p className="mt-3 text-sm leading-7 text-brand-off-white/68">
+              Use o disparo manual quando voce quiser forcar uma nova rodada e
+              depois atualize o painel para conferir o efeito.
+            </p>
+            <div className="mt-6 space-y-4">
+              <RunMatchmakingButton />
+              <Link
+                href="/admin"
+                className="inline-flex rounded-full border border-brand-green/24 bg-brand-dark-green/62 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-brand-off-white/70 transition-colors hover:border-brand-green hover:text-brand-off-white"
+              >
+                Atualizar painel
+              </Link>
+            </div>
+          </Card>
+        </section>
 
         <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <div className="rounded-xl border border-brand-green/30 p-4">
-            <p className="text-sm text-brand-off-white/60">Pessoas na fila</p>
-            <p className="mt-2 font-heading text-3xl font-bold">{dashboard.waitingPoolCount}</p>
-          </div>
-          <div className="rounded-xl border border-brand-green/30 p-4">
-            <p className="text-sm text-brand-off-white/60">Times pendentes</p>
-            <p className="mt-2 font-heading text-3xl font-bold">{dashboard.pendingTeams.length}</p>
-          </div>
-          <div className="rounded-xl border border-brand-green/30 p-4">
-            <p className="text-sm text-brand-off-white/60">Times inativos</p>
-            <p className="mt-2 font-heading text-3xl font-bold">{dashboard.inactiveTeams.length}</p>
-          </div>
-          <div className="rounded-xl border border-brand-green/30 p-4">
-            <p className="text-sm text-brand-off-white/60">Execuções registradas</p>
-            <p className="mt-2 font-heading text-3xl font-bold">{dashboard.recentRuns.length}</p>
-          </div>
+          {[
+            {
+              label: "Pessoas na fila",
+              value: dashboard.waitingPoolCount,
+              tone: "text-brand-emerald",
+            },
+            {
+              label: "Times pendentes",
+              value: dashboard.pendingTeams.length,
+              tone: "text-brand-yellow",
+            },
+            {
+              label: "Times inativos",
+              value: dashboard.inactiveTeams.length,
+              tone: "text-brand-off-white",
+            },
+            {
+              label: "Execucoes registradas",
+              value: dashboard.recentRuns.length,
+              tone: "text-brand-off-white",
+            },
+          ].map((item) => (
+            <Card
+              key={item.label}
+              className="rounded-[1.5rem] border-brand-green/24 bg-brand-dark-green/72 p-5"
+            >
+              <p className="text-xs uppercase tracking-[0.16em] text-brand-off-white/46">
+                {item.label}
+              </p>
+              <p className={`mt-3 font-heading text-4xl font-bold ${item.tone}`}>
+                {item.value}
+              </p>
+            </Card>
+          ))}
         </section>
 
         <section className="grid gap-6 xl:grid-cols-2">
-          <div className="space-y-4 rounded-2xl border border-brand-green/30 p-6">
+          <Card className="space-y-5 rounded-[2rem] p-6">
             <div>
-              <h2 className="font-heading text-xl font-semibold">Fila</h2>
-              <p className="text-sm text-brand-off-white/60">Usuários aguardando há mais tempo.</p>
+              <p className="text-xs uppercase tracking-[0.18em] text-brand-off-white/42">
+                Fila
+              </p>
+              <h2 className="mt-2 font-heading text-2xl font-semibold">
+                Quem esta esperando ha mais tempo
+              </h2>
             </div>
             <div className="space-y-3">
-              {normalizedWaitingUsers.map((entry) => (
-                <div key={entry.user_id} className="rounded-lg bg-brand-green/10 p-3">
-                  <p className="font-medium">{entry.profile.name}</p>
-                  <p className="text-sm text-brand-off-white/60">
-                    {entry.profile.primary_role} · {entry.profile.seniority}
-                  </p>
-                  <p className="text-xs text-brand-off-white/50">
-                    Entrou em {new Date(entry.created_at).toLocaleString('pt-BR')}
-                  </p>
-                </div>
-              ))}
+              {normalizedWaitingUsers.length > 0 ? (
+                normalizedWaitingUsers.map((entry) => (
+                  <Card
+                    key={entry.user_id}
+                    className="rounded-[1.25rem] border-brand-green/22 bg-brand-green/8 p-4"
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <p className="font-heading text-lg font-semibold">
+                          {entry.profile.name}
+                        </p>
+                        <p className="mt-1 text-sm text-brand-off-white/64">
+                          {entry.profile.primary_role} · {entry.profile.seniority}
+                        </p>
+                      </div>
+                      <Link
+                        href={`/admin?userId=${entry.user_id}`}
+                        className="text-xs uppercase tracking-[0.14em] text-brand-emerald hover:text-brand-off-white"
+                      >
+                        Inspecionar
+                      </Link>
+                    </div>
+                    <p className="mt-3 text-xs text-brand-off-white/46">
+                      Entrou em {formatDateTime(entry.created_at)}
+                    </p>
+                  </Card>
+                ))
+              ) : (
+                <p className="text-sm text-brand-off-white/60">
+                  Ninguem aguardando no momento.
+                </p>
+              )}
             </div>
-          </div>
+          </Card>
 
-          <div className="space-y-4 rounded-2xl border border-brand-green/30 p-6">
+          <Card className="space-y-5 rounded-[2rem] p-6">
             <div>
-              <h2 className="font-heading text-xl font-semibold">Execuções recentes</h2>
-              <p className="text-sm text-brand-off-white/60">Resumo das últimas rodadas.</p>
+              <p className="text-xs uppercase tracking-[0.18em] text-brand-off-white/42">
+                Matchmaking
+              </p>
+              <h2 className="mt-2 font-heading text-2xl font-semibold">
+                Execucoes recentes
+              </h2>
             </div>
             <div className="space-y-3">
-              {dashboard.recentRuns.map((run) => (
-                <div key={run.id} className="rounded-lg bg-brand-green/10 p-3 text-sm">
-                  <p className="font-medium">
-                    {run.trigger_source} · {run.status}
-                  </p>
-                  <p className="text-brand-off-white/60">
-                    Pool {run.pool_size} · Times {run.teams_formed} · Matches {run.users_matched}
-                  </p>
-                  {run.notes && <p className="text-brand-off-white/50">{run.notes}</p>}
-                </div>
-              ))}
+              {dashboard.recentRuns.length > 0 ? (
+                dashboard.recentRuns.map((run) => (
+                  <Card
+                    key={run.id}
+                    className="rounded-[1.25rem] border-brand-green/22 bg-brand-green/8 p-4 text-sm"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="font-medium capitalize">
+                          {run.trigger_source} · {run.status}
+                        </p>
+                        <p className="mt-1 text-brand-off-white/62">
+                          Pool {run.pool_size} · Times {run.teams_formed} · Matches{" "}
+                          {run.users_matched}
+                        </p>
+                      </div>
+                      <span className="text-xs text-brand-off-white/42">
+                        {formatDateTime(run.started_at)}
+                      </span>
+                    </div>
+                    {run.notes && (
+                      <p className="mt-3 leading-6 text-brand-off-white/54">
+                        {run.notes}
+                      </p>
+                    )}
+                  </Card>
+                ))
+              ) : (
+                <p className="text-sm text-brand-off-white/60">
+                  Ainda nao existem execucoes registradas.
+                </p>
+              )}
             </div>
-          </div>
+          </Card>
         </section>
 
-        <section className="grid gap-6 xl:grid-cols-2">
-          <div className="space-y-4 rounded-2xl border border-brand-green/30 p-6">
-            <h2 className="font-heading text-xl font-semibold">Times</h2>
+        <section className="grid gap-6 xl:grid-cols-[1.08fr_0.92fr]">
+          <Card className="space-y-5 rounded-[2rem] p-6">
+            <div>
+              <p className="text-xs uppercase tracking-[0.18em] text-brand-off-white/42">
+                Times
+              </p>
+              <h2 className="mt-2 font-heading text-2xl font-semibold">
+                Recortes operacionais
+              </h2>
+            </div>
+
             <div className="space-y-3">
               {dashboard.recentTeams.map((team) => (
-                <div key={team.id} className="rounded-lg bg-brand-green/10 p-3">
-                  <p className="font-medium">{team.name}</p>
-                  <p className="text-sm text-brand-off-white/60">
-                    {team.status} · {team.created_at ? new Date(team.created_at).toLocaleString('pt-BR') : 'sem data'}
-                  </p>
-                  <Link href={`/admin?teamId=${team.id}`} className="text-sm text-brand-emerald hover:underline">
-                    Inspecionar time
-                  </Link>
-                </div>
+                <Card
+                  key={team.id}
+                  className="rounded-[1.25rem] border-brand-green/22 bg-brand-green/8 p-4"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <p className="font-heading text-lg font-semibold">
+                        {team.name}
+                      </p>
+                      <p className="mt-1 text-sm text-brand-off-white/62">
+                        {team.status} · {formatDateTime(team.created_at)}
+                      </p>
+                    </div>
+                    <Link
+                      href={`/admin?teamId=${team.id}`}
+                      className="text-xs uppercase tracking-[0.14em] text-brand-emerald hover:text-brand-off-white"
+                    >
+                      Inspecionar
+                    </Link>
+                  </div>
+                </Card>
               ))}
             </div>
-            <div className="space-y-3 border-t border-brand-green/20 pt-4">
-              <h3 className="font-heading text-sm font-semibold">Pendentes sem líder</h3>
-              {dashboard.pendingTeams.map((team) => (
-                <div key={team.id} className="rounded-lg bg-brand-green/10 p-3">
-                  <p className="font-medium">{team.name}</p>
-                  <p className="text-sm text-brand-off-white/60">
-                    Prazo: {team.activation_deadline_at ? new Date(team.activation_deadline_at).toLocaleString('pt-BR') : 'sem prazo'}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
 
-          <div className="space-y-4 rounded-2xl border border-brand-green/30 p-6">
-            <h2 className="font-heading text-xl font-semibold">Inspeção</h2>
+            <div className="grid gap-4 border-t border-brand-green/18 pt-4 lg:grid-cols-2">
+              <div className="space-y-3">
+                <h3 className="font-heading text-lg font-semibold text-brand-off-white">
+                  Pendentes sem lider
+                </h3>
+                {dashboard.pendingTeams.length > 0 ? (
+                  dashboard.pendingTeams.map((team) => (
+                    <Card
+                      key={team.id}
+                      className="rounded-[1.25rem] border-brand-yellow/22 bg-brand-yellow/8 p-4"
+                    >
+                      <p className="font-medium">{team.name}</p>
+                      <p className="mt-1 text-sm text-brand-off-white/62">
+                        Prazo: {formatDateTime(team.activation_deadline_at)}
+                      </p>
+                    </Card>
+                  ))
+                ) : (
+                  <p className="text-sm text-brand-off-white/60">
+                    Nenhum time pendente sem lider.
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-3">
+                <h3 className="font-heading text-lg font-semibold text-brand-off-white">
+                  Inativos
+                </h3>
+                {dashboard.inactiveTeams.length > 0 ? (
+                  dashboard.inactiveTeams.map((team) => (
+                    <Card
+                      key={team.id}
+                      className="rounded-[1.25rem] border-brand-green/22 bg-brand-green/8 p-4"
+                    >
+                      <p className="font-medium">{team.name}</p>
+                      <p className="mt-1 text-sm text-brand-off-white/62">
+                        Atualizado em {formatDateTime(team.updated_at)}
+                      </p>
+                    </Card>
+                  ))
+                ) : (
+                  <p className="text-sm text-brand-off-white/60">
+                    Nenhum time inativo no momento.
+                  </p>
+                )}
+              </div>
+            </div>
+          </Card>
+
+          <Card className="space-y-5 rounded-[2rem] p-6">
+            <div>
+              <p className="text-xs uppercase tracking-[0.18em] text-brand-off-white/42">
+                Inspecao
+              </p>
+              <h2 className="mt-2 font-heading text-2xl font-semibold">
+                Buscar usuario ou time
+              </h2>
+            </div>
+
             <form action="/admin" className="space-y-3">
-              <label className="block text-sm text-brand-off-white/60">
-                Usuário por ID
-                <input
+              <label className="block text-sm text-brand-off-white/62">
+                Usuario por ID
+                <Input
                   type="text"
                   name="userId"
                   defaultValue={userId}
-                  className="mt-1 w-full rounded-lg border border-brand-green bg-brand-dark-green px-3 py-2 text-sm"
+                  className="mt-2 px-4 py-3 text-sm"
                 />
               </label>
-              <button className="rounded-lg bg-brand-emerald px-4 py-2 text-sm font-medium text-brand-off-white">
-                Inspecionar usuário
-              </button>
+              <Button size="sm" variant="primary">
+                Inspecionar usuario
+              </Button>
             </form>
-            <form action="/admin" className="space-y-3">
-              <label className="block text-sm text-brand-off-white/60">
+
+            <form action="/admin" className="space-y-3 border-t border-brand-green/18 pt-4">
+              <label className="block text-sm text-brand-off-white/62">
                 Time por ID
-                <input
+                <Input
                   type="text"
                   name="teamId"
                   defaultValue={teamId}
-                  className="mt-1 w-full rounded-lg border border-brand-green bg-brand-dark-green px-3 py-2 text-sm"
+                  className="mt-2 px-4 py-3 text-sm"
                 />
               </label>
-              <button className="rounded-lg bg-brand-emerald px-4 py-2 text-sm font-medium text-brand-off-white">
+              <Button size="sm" variant="primary">
                 Inspecionar time
-              </button>
+              </Button>
             </form>
 
             {userInspection && (
-              <div className="rounded-lg bg-brand-green/10 p-4 text-sm">
-                <p className="font-medium">Estado do usuário: {userInspection.state}</p>
-                <p className="text-brand-off-white/60">
-                  Perfil: {userInspection.profile ? 'sim' : 'não'} · Pool: {userInspection.poolEntry?.status ?? 'nenhum'}
+              <Card className="rounded-[1.25rem] border-brand-green/22 bg-brand-green/8 p-4 text-sm">
+                <p className="font-heading text-lg font-semibold">
+                  Estado do usuario
                 </p>
-                <p className="text-brand-off-white/60">
-                  Time: {userInspection.team?.name ?? 'nenhum'}
+                <p className="mt-3 text-brand-off-white/64">
+                  Estado: {userInspection.state}
                 </p>
-              </div>
+                <p className="text-brand-off-white/64">
+                  Perfil: {userInspection.profile ? "sim" : "nao"} · Pool:{" "}
+                  {userInspection.poolEntry?.status ?? "nenhum"}
+                </p>
+                <p className="text-brand-off-white/64">
+                  Time: {userInspection.team?.name ?? "nenhum"}
+                </p>
+              </Card>
             )}
 
             {teamInspection && teamInspection.team && (
-              <div className="rounded-lg bg-brand-green/10 p-4 text-sm">
-                <p className="font-medium">{teamInspection.team.name}</p>
-                <p className="text-brand-off-white/60">Status: {teamInspection.team.status}</p>
-                <div className="mt-3 space-y-2">
+              <Card className="rounded-[1.25rem] border-brand-green/22 bg-brand-green/8 p-4 text-sm">
+                <p className="font-heading text-lg font-semibold">
+                  {teamInspection.team.name}
+                </p>
+                <p className="mt-2 text-brand-off-white/64">
+                  Status: {teamInspection.team.status}
+                </p>
+                <div className="mt-4 space-y-3">
                   {normalizedTeamInspectionMembers.map((member) => (
-                    <div key={member.id}>
-                      <p>
+                    <div key={member.id} className="rounded-xl border border-brand-green/18 bg-brand-dark-green/60 px-3 py-3">
+                      <p className="font-medium">
                         {member.profile.name}
-                        {member.is_leader ? ' · líder' : ''}
+                        {member.is_leader ? " · lider" : ""}
                       </p>
-                      <p className="text-brand-off-white/50">
+                      <p className="mt-1 text-brand-off-white/50">
                         {member.profile.primary_role} · {member.status}
                       </p>
                     </div>
                   ))}
                 </div>
-              </div>
+              </Card>
             )}
-          </div>
+          </Card>
         </section>
       </div>
     </main>

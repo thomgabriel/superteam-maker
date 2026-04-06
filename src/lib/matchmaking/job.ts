@@ -5,6 +5,7 @@ import type { EnrichedPoolUser } from '@/types/database';
 import { trackEvent } from '@/lib/analytics.server';
 import { sendMatchNotification } from '@/lib/email';
 import { scoreCandidate } from './scoring';
+import { generateUniqueTeamName } from './team-names';
 
 interface RunMatchmakingJobOptions {
   triggerSource: 'cron' | 'admin';
@@ -363,6 +364,16 @@ async function fetchWaitingPool(supabase: SupabaseClient) {
   ) as EnrichedPoolUser[];
 }
 
+async function loadUsedTeamNames(supabase: SupabaseClient) {
+  const { data, error } = await supabase.from('teams').select('name');
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return new Set((data ?? []).map((team) => team.name));
+}
+
 function createSupabaseServiceClient() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -413,6 +424,7 @@ export async function runMatchmakingJob(
 
     const roundNumber = Math.floor((count ?? 0) / 10);
     const candidateTeams = runMatchmaking(pool, roundNumber);
+    const usedTeamNames = await loadUsedTeamNames(supabase);
     let teamsFormed = 0;
     let usersMatched = 0;
 
@@ -438,14 +450,16 @@ export async function runMatchmakingJob(
       );
 
       if (eligibleMembers.length !== team.members.length) {
-        notes.push(`skipped ${team.name} because at least one user was no longer eligible`);
+        notes.push('skipped a candidate team because at least one user was no longer eligible');
         continue;
       }
+
+      const uniqueTeamName = generateUniqueTeamName(usedTeamNames);
 
       const { data: teamRow, error: teamInsertError } = await supabase
         .from('teams')
         .insert({
-          name: team.name,
+          name: uniqueTeamName,
           status: 'pending_activation',
           round_number: roundNumber,
           activation_deadline_at: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(),
@@ -454,7 +468,7 @@ export async function runMatchmakingJob(
         .single();
 
       if (teamInsertError || !teamRow) {
-        notes.push(`failed to create team ${team.name}`);
+        notes.push(`failed to create team ${uniqueTeamName}`);
         continue;
       }
 
@@ -468,7 +482,7 @@ export async function runMatchmakingJob(
       );
 
       if (memberInsertError) {
-        notes.push(`failed to attach members to team ${team.name}`);
+        notes.push(`failed to attach members to team ${uniqueTeamName}`);
         await supabase.from('teams').delete().eq('id', teamRow.id);
         continue;
       }

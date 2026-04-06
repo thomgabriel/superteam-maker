@@ -4,6 +4,10 @@ import { useState } from 'react';
 import { updateTeamProfile } from '@/app/(app)/equipe/[id]/actions';
 import type { Team } from '@/types/database';
 import { INTERESTS } from '@/lib/constants';
+import { Button } from '@/components/ui/button';
+import { Input, inputClassName } from '@/components/ui/input';
+import { Select } from '@/components/ui/select';
+import { Card } from '@/components/ui/card';
 
 export function LeaderPanel({ team }: { team: Team }) {
   const [name, setName] = useState(team.name);
@@ -27,49 +31,82 @@ export function LeaderPanel({ team }: { team: Team }) {
   }
 
   return (
-    <div className="space-y-4 rounded-lg border border-brand-green/30 p-4">
-      <h3 className="font-heading text-sm font-semibold text-brand-yellow">Painel do Líder</h3>
-
-      <div className="rounded-lg bg-brand-green/10 p-3">
-        <p className="text-sm text-brand-off-white/70"><strong>Próximos passos:</strong></p>
-        <ol className="mt-2 list-inside list-decimal space-y-1 text-sm text-brand-off-white/60">
-          <li>Crie um grupo no WhatsApp</li>
-          <li>Adicione todos os membros</li>
-          <li>Definam uma ideia juntos</li>
-        </ol>
+    <Card className="space-y-6 rounded-[1.75rem] border-brand-yellow/24 bg-[linear-gradient(135deg,rgba(255,210,63,0.10),rgba(27,35,29,0.96))] p-6">
+      <div>
+        <p className="text-xs uppercase tracking-[0.18em] text-brand-yellow/82">
+          Painel do lider
+        </p>
+        <h3 className="mt-3 font-heading text-2xl font-semibold text-brand-off-white">
+          Organize o comeco do time.
+        </h3>
       </div>
 
-      <div className="space-y-3">
+      <Card className="rounded-[1.25rem] border-brand-green/22 bg-brand-green/8 p-4">
+        <p className="text-xs uppercase tracking-[0.16em] text-brand-off-white/46">
+          Proximos passos
+        </p>
+        <ol className="mt-3 list-inside list-decimal space-y-2 text-sm leading-7 text-brand-off-white/72">
+          <li>Crie um grupo no WhatsApp.</li>
+          <li>Adicione todos os membros.</li>
+          <li>Definam uma ideia e preencham esse bloco juntos.</li>
+        </ol>
+      </Card>
+
+      <div className="grid gap-4">
         <div>
-          <label className="mb-1 block text-xs font-medium text-brand-off-white/60">Nome do time</label>
-          <input type="text" value={name} onChange={(e) => setName(e.target.value)}
-            className="w-full rounded-lg border border-brand-green bg-brand-dark-green px-3 py-2 text-sm text-brand-off-white focus:border-brand-emerald focus:outline-none" />
+          <label className="mb-2 block text-xs font-medium uppercase tracking-[0.14em] text-brand-off-white/54">
+            Nome do time
+          </label>
+          <Input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="px-4 py-3 text-sm"
+          />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-brand-off-white/60">Ideia do projeto</label>
-          <input type="text" value={ideaTitle} onChange={(e) => setIdeaTitle(e.target.value)} placeholder="Título da ideia"
-            className="w-full rounded-lg border border-brand-green bg-brand-dark-green px-3 py-2 text-sm text-brand-off-white placeholder:text-brand-off-white/30 focus:border-brand-emerald focus:outline-none" />
+          <label className="mb-2 block text-xs font-medium uppercase tracking-[0.14em] text-brand-off-white/54">
+            Ideia do projeto
+          </label>
+          <Input
+            type="text"
+            value={ideaTitle}
+            onChange={(e) => setIdeaTitle(e.target.value)}
+            placeholder="Titulo da ideia"
+            className="px-4 py-3 text-sm placeholder:text-brand-off-white/30"
+          />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-brand-off-white/60">Descrição</label>
-          <textarea value={ideaDescription} onChange={(e) => setIdeaDescription(e.target.value)} placeholder="Descreva a ideia do time..." rows={3}
-            className="w-full rounded-lg border border-brand-green bg-brand-dark-green px-3 py-2 text-sm text-brand-off-white placeholder:text-brand-off-white/30 focus:border-brand-emerald focus:outline-none" />
+          <label className="mb-2 block text-xs font-medium uppercase tracking-[0.14em] text-brand-off-white/54">
+            Descricao
+          </label>
+          <textarea
+            value={ideaDescription}
+            onChange={(e) => setIdeaDescription(e.target.value)}
+            placeholder="Descreva rapidamente o que o time quer construir..."
+            rows={4}
+            className={`w-full ${inputClassName} px-4 py-3 text-sm leading-7 placeholder:text-brand-off-white/30`}
+          />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-brand-off-white/60">Categoria</label>
-          <select value={projectCategory} onChange={(e) => setProjectCategory(e.target.value)}
-            className="w-full rounded-lg border border-brand-green bg-brand-dark-green px-3 py-2 text-sm text-brand-off-white focus:border-brand-emerald focus:outline-none">
+          <label className="mb-2 block text-xs font-medium uppercase tracking-[0.14em] text-brand-off-white/54">
+            Categoria
+          </label>
+          <Select
+            value={projectCategory}
+            onChange={(e) => setProjectCategory(e.target.value)}
+            className="px-4 py-3 text-sm"
+          >
             <option value="">Selecione...</option>
             {INTERESTS.map((interest) => (
               <option key={interest} value={interest}>{interest}</option>
             ))}
-          </select>
+          </Select>
         </div>
-        <button onClick={handleSave} disabled={saving}
-          className="w-full rounded-lg bg-brand-emerald px-4 py-2 text-sm font-medium text-brand-off-white transition-opacity hover:opacity-90 disabled:opacity-50">
-          {saving ? 'Salvando...' : saved ? 'Salvo!' : 'Salvar alterações'}
-        </button>
+        <Button onClick={handleSave} disabled={saving} variant="primary" size="lg" fullWidth>
+          {saving ? 'Salvando...' : saved ? 'Salvo!' : 'Salvar alteracoes'}
+        </Button>
       </div>
-    </div>
+    </Card>
   );
 }

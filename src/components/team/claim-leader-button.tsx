@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { claimLeadership } from '@/app/(app)/equipe/[id]/actions';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 
 export function ClaimLeaderButton({ teamId }: { teamId: string }) {
   const [loading, setLoading] = useState(false);
@@ -17,12 +19,24 @@ export function ClaimLeaderButton({ teamId }: { teamId: string }) {
   }
 
   return (
-    <div className="space-y-2">
-      <button onClick={handleClaim} disabled={loading}
-        className="w-full rounded-lg bg-brand-yellow px-4 py-3 font-heading font-semibold text-brand-dark-green transition-opacity hover:opacity-90 disabled:opacity-50">
-        {loading ? 'Assumindo...' : 'Assumir liderança'}
-      </button>
-      {message && <p className="text-center text-sm text-brand-off-white/60">{message}</p>}
-    </div>
+    <Card className="rounded-[1.75rem] border-brand-yellow/24 bg-[linear-gradient(135deg,rgba(255,210,63,0.10),rgba(27,35,29,0.96))] p-5">
+      <p className="text-xs uppercase tracking-[0.18em] text-brand-yellow/80">
+        Lideranca em aberto
+      </p>
+      <h3 className="mt-3 font-heading text-2xl font-semibold text-brand-off-white">
+        Alguem do time precisa puxar o comeco.
+      </h3>
+      <p className="mt-3 text-sm leading-7 text-brand-off-white/68">
+        Quem assumir consegue organizar o grupo, definir a ideia inicial e
+        atualizar o perfil do projeto para o resto do time.
+      </p>
+
+      <div className="mt-5 space-y-3">
+        <Button onClick={handleClaim} disabled={loading} variant="secondary" fullWidth>
+          {loading ? 'Assumindo...' : 'Assumir liderança'}
+        </Button>
+        {message && <p className="text-center text-sm text-brand-off-white/60">{message}</p>}
+      </div>
+    </Card>
   );
 }

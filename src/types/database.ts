@@ -41,6 +41,9 @@ export interface Profile {
   user_id: string;
   name: string;
   phone_number: string;
+  linkedin_url: string | null;
+  github_url: string | null;
+  x_url: string | null;
   primary_role: string;
   macro_role: MacroRole;
   years_experience: number;
