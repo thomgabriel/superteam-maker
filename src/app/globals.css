@@ -1,0 +1,18 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-dark-green: #1b231d;
+  --color-brand-emerald: #008b4c;
+  --color-brand-green: #306c40;
+  --color-brand-yellow: #ffd23f;
+  --color-brand-off-white: #f5e8ca;
+
+  --font-heading: var(--font-archivo);
+  --font-body: var(--font-inter);
+}
+
+body {
+  background-color: var(--color-brand-dark-green);
+  color: var(--color-brand-off-white);
+  font-family: var(--font-body);
+}
