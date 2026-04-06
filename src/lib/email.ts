@@ -1,14 +1,29 @@
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 const FROM_EMAIL = 'SuperTeamMaker <noreply@updates.solarium.courses>';
+
+function getResendClient() {
+  const apiKey = process.env.RESEND_API_KEY;
+
+  if (!apiKey) {
+    return null;
+  }
+
+  return new Resend(apiKey);
+}
 
 export async function sendMatchNotification(
   to: string,
   teamName: string,
 ) {
   try {
+    const resend = getResendClient();
+
+    if (!resend) {
+      console.warn('[email] RESEND_API_KEY is not configured, skipping match notification');
+      return;
+    }
+
     await resend.emails.send({
       from: FROM_EMAIL,
       to,

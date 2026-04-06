@@ -3,9 +3,12 @@
 export const dynamic = 'force-dynamic';
 
 import { createClient } from '@/lib/supabase/client';
-import { useState } from 'react';
+import { trackEvent } from '@/lib/analytics';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { TrackPageView } from '@/components/ui/track-event';
+import { Suspense } from 'react';
+import { UtmCapture } from '@/components/ui/utm-capture';
 
 export default function AuthPage() {
   const [email, setEmail] = useState('');
@@ -14,9 +17,28 @@ export default function AuthPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const supabase = createClient();
+  const router = useRouter();
+
+  // If already authenticated, redirect to app
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        router.replace('/perfil');
+      }
+    });
+  }, [supabase, router]);
+
+  function trackSignupStarted(method: 'google' | 'otp') {
+    void trackEvent({
+      event: 'signup_started',
+      route: '/auth',
+      properties: { method },
+    });
+  }
 
   async function handleGoogleSignIn() {
     setLoading(true);
+    trackSignupStarted('google');
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
@@ -32,6 +54,7 @@ export default function AuthPage() {
   async function handleSendOtp() {
     setLoading(true);
     setError(null);
+    trackSignupStarted('otp');
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
@@ -64,7 +87,9 @@ export default function AuthPage() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center px-4">
-      <TrackPageView event="signup_started" />
+      <Suspense>
+        <UtmCapture />
+      </Suspense>
       <div className="w-full max-w-sm space-y-8">
         <div className="flex flex-col items-center">
           <Image

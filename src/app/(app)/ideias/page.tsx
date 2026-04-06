@@ -1,5 +1,7 @@
 import Image from 'next/image';
 
+export const dynamic = 'force-dynamic';
+
 const MOCK_IDEAS = [
   {
     id: '1',

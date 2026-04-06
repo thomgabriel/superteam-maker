@@ -29,6 +29,17 @@ describe('getUserState', () => {
   it('returns waiting_match as fallback when profile exists but no pool/team', () => {
     expect(getUserState(mockProfile, null, null, null)).toBe('waiting_match');
   });
+
+  it('keeps assigned users without team membership in waiting_match', () => {
+    expect(getUserState(mockProfile, mockPoolAssigned, null, null)).toBe('waiting_match');
+  });
+
+  it('prioritizes team membership over waiting pool status', () => {
+    // User has both a waiting pool entry AND a team membership
+    // Team membership should take priority (they're already matched)
+    expect(getUserState(mockProfile, mockPoolWaiting, mockMember, mockTeamPending)).toBe('matched');
+    expect(getUserState(mockProfile, mockPoolWaiting, mockMember, mockTeamActive)).toBe('team_active');
+  });
 });
 
 describe('getRedirectPath', () => {

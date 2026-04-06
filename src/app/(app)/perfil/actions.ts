@@ -1,6 +1,8 @@
 'use server';
 
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { persistAttributionForUser } from '@/lib/attribution';
+import { trackEvent } from '@/lib/analytics.server';
 import { getMacroRole } from '@/lib/matchmaking/roles';
 import { redirect } from 'next/navigation';
 
@@ -41,6 +43,20 @@ export async function createProfile(data: ProfileFormData) {
     }
     throw new Error(`Erro ao criar perfil: ${error.message}`);
   }
+
+  await persistAttributionForUser(user.id);
+  await trackEvent({
+    event: 'profile_completed',
+    userId: user.id,
+    route: '/perfil',
+    properties: { primary_role: data.primary_role },
+  });
+  await trackEvent({
+    event: 'entered_pool',
+    userId: user.id,
+    route: '/fila',
+    properties: { macro_role: macroRole },
+  });
 
   redirect('/fila');
 }

@@ -1,4 +1,4 @@
-import type { MacroRole, Seniority, EnrichedPoolUser } from '@/types/database';
+import type { Seniority, EnrichedPoolUser } from '@/types/database';
 import type { ScoringWeights } from './config';
 
 const SENIORITY_ORDER: Seniority[] = ['beginner', 'junior', 'mid', 'senior'];

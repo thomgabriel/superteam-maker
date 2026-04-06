@@ -1,20 +1,30 @@
-type AnalyticsEvent =
-  | 'landing_view'
-  | 'signup_started'
-  | 'signup_completed'
-  | 'profile_completed'
-  | 'entered_pool'
-  | 'matched_to_team'
-  | 'team_reveal_viewed'
-  | 'leader_claimed'
-  | 'whatsapp_clicked'
-  | 'team_activated'
-  | 'user_replaced';
+import { ANON_ID_COOKIE_NAME } from '@/lib/attribution-constants';
+import type { AnalyticsEvent } from '@/types/database';
 
-interface EventProperties {
-  [key: string]: string | number | boolean | undefined;
-}
+type EventProperties = Record<string, string | number | boolean | null | undefined>;
 
-export function trackEvent(event: AnalyticsEvent, properties?: EventProperties) {
-  console.log(`[analytics] ${event}`, properties ?? {});
+export async function trackEvent(input: {
+  event: AnalyticsEvent;
+  anonymousId?: string | null;
+  route?: string | null;
+  properties?: EventProperties;
+}) {
+  const anonymousId =
+    input.anonymousId ??
+    (typeof window !== 'undefined'
+      ? localStorage.getItem(ANON_ID_COOKIE_NAME)
+      : null);
+
+  await fetch('/api/analytics', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      event: input.event,
+      anonymousId,
+      route: input.route ?? null,
+      properties: input.properties,
+    }),
+  });
 }

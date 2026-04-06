@@ -1,6 +1,7 @@
 'use server';
 
 import { createServiceRoleClient, createServerSupabaseClient } from '@/lib/supabase/server';
+import { trackEvent } from '@/lib/analytics.server';
 import { revalidatePath } from 'next/cache';
 
 export async function claimLeadership(teamId: string) {
@@ -32,6 +33,19 @@ export async function claimLeadership(teamId: string) {
     .eq('team_id', teamId)
     .eq('user_id', user.id);
 
+  await trackEvent({
+    event: 'leader_claimed',
+    userId: user.id,
+    route: `/equipe/${teamId}`,
+    properties: { team_id: teamId },
+  });
+  await trackEvent({
+    event: 'team_activated',
+    userId: user.id,
+    route: `/equipe/${teamId}`,
+    properties: { team_id: teamId },
+  });
+
   revalidatePath(`/equipe/${teamId}`);
   return { success: true };
 }
@@ -49,7 +63,10 @@ export async function updateTeamProfile(
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Not authenticated');
 
-  const { data: team } = await supabase
+  // Use service role — sb_publishable_ anon key doesn't pass RLS context
+  const serviceClient = await createServiceRoleClient();
+
+  const { data: team } = await serviceClient
     .from('teams')
     .select('leader_id')
     .eq('id', teamId)
@@ -59,7 +76,7 @@ export async function updateTeamProfile(
     return { success: false, message: 'Apenas o líder pode editar.' };
   }
 
-  const { error } = await supabase
+  const { error } = await serviceClient
     .from('teams')
     .update({ ...data, updated_at: new Date().toISOString() })
     .eq('id', teamId);

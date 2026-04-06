@@ -1,4 +1,4 @@
-import type { EnrichedPoolUser, MacroRole, Seniority } from '@/types/database';
+import type { EnrichedPoolUser, Seniority } from '@/types/database';
 import { MATCHMAKING_CONFIG } from './config';
 import { scoreCandidate } from './scoring';
 import { generateTeamName } from './team-names';

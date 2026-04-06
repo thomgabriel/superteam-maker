@@ -3,6 +3,20 @@ export type Seniority = 'beginner' | 'junior' | 'mid' | 'senior';
 export type PoolStatus = 'waiting' | 'assigned';
 export type TeamStatus = 'forming' | 'pending_activation' | 'active' | 'inactive';
 export type MemberStatus = 'active' | 'inactive' | 'replaced';
+export type MatchmakingRunStatus = 'running' | 'completed' | 'failed';
+
+export type AnalyticsEvent =
+  | 'landing_view'
+  | 'signup_started'
+  | 'signup_completed'
+  | 'profile_completed'
+  | 'entered_pool'
+  | 'matched_to_team'
+  | 'team_reveal_viewed'
+  | 'leader_claimed'
+  | 'team_activated'
+  | 'whatsapp_clicked'
+  | 'user_replaced';
 
 export interface Campaign {
   id: string;
@@ -84,6 +98,30 @@ export interface TeamMember {
   last_active_at: string;
   status: MemberStatus;
   replaced_at: string | null;
+}
+
+export interface AnalyticsEventRecord {
+  id: string;
+  event_name: AnalyticsEvent;
+  user_id: string | null;
+  anonymous_id: string | null;
+  route: string | null;
+  metadata: Record<string, string | number | boolean | null> | null;
+  created_at: string;
+}
+
+export interface MatchmakingRun {
+  id: string;
+  trigger_source: string;
+  status: MatchmakingRunStatus;
+  pool_size: number;
+  teams_formed: number;
+  users_matched: number;
+  replacements_performed: number;
+  notes: string | null;
+  error_message: string | null;
+  started_at: string;
+  finished_at: string | null;
 }
 
 export interface EnrichedPoolUser {

@@ -1,28 +1,15 @@
 import { redirect } from 'next/navigation';
-import { createServerSupabaseClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { ProfileForm } from '@/components/profile/profile-form';
 import Image from 'next/image';
+import { resolveAuthenticatedUserState } from '@/lib/user-state';
 
 export const dynamic = 'force-dynamic';
 
 export default async function ProfilePage() {
-  // Auth is enforced by middleware; getUser() here is only to obtain user.id.
-  const supabase = await createServerSupabaseClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) redirect('/auth');
-
-  // Check if profile exists using service role (bypasses RLS)
-  const db = await createServiceRoleClient();
-
-  const { data: profile } = await db
-    .from('profiles')
-    .select('id')
-    .eq('user_id', user.id)
-    .maybeSingle();
-
-  if (profile) {
-    redirect('/fila');
+  const resolvedState = await resolveAuthenticatedUserState();
+  if (!resolvedState) redirect('/auth');
+  if (resolvedState.state !== 'needs_profile') {
+    redirect(resolvedState.redirectPath);
   }
 
   return (

@@ -43,10 +43,10 @@ export async function updateSession(request: NextRequest) {
     return createRedirectWithCookies(url, supabaseResponse);
   }
 
-  // Authenticated users on /auth -> /perfil
+  // Authenticated users on /auth -> send to app
   if (user && path === '/auth') {
     const url = request.nextUrl.clone();
-    url.pathname = '/perfil';
+    url.pathname = '/perfil'; // perfil will redirect to fila/equipe based on state
     return createRedirectWithCookies(url, supabaseResponse);
   }
 

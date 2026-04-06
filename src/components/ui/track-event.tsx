@@ -3,15 +3,21 @@
 import { useEffect } from 'react';
 import { trackEvent } from '@/lib/analytics';
 
+type TrackEventOptions = Parameters<typeof trackEvent>[0];
+
 export function TrackPageView({
   event,
   properties,
 }: {
-  event: Parameters<typeof trackEvent>[0];
-  properties?: Parameters<typeof trackEvent>[1];
+  event: TrackEventOptions['event'];
+  properties?: TrackEventOptions['properties'];
 }) {
   useEffect(() => {
-    trackEvent(event, properties);
+    void trackEvent({
+      event,
+      properties,
+      route: window.location.pathname,
+    });
   }, [event, properties]);
 
   return null;
