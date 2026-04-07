@@ -1,6 +1,6 @@
-import { SENIORITY_LABELS, MACRO_ROLE_LABELS } from '@/lib/constants';
-import { Card } from '@/components/ui/card';
-import { Tag } from '@/components/ui/tag';
+import { MACRO_ROLE_LABELS } from "@/lib/constants";
+import { Card } from "@/components/ui/card";
+import { Tag } from "@/components/ui/tag";
 
 interface MemberCardProps {
   name: string;
@@ -19,7 +19,6 @@ export function MemberCard({
   name,
   specificRole,
   macroRole,
-  seniority,
   isLeader,
   phoneNumber,
   linkedinUrl,
@@ -28,13 +27,15 @@ export function MemberCard({
   showPhone = false,
 }: MemberCardProps) {
   const whatsappUrl = phoneNumber
-    ? `https://wa.me/${phoneNumber.replace(/\D/g, '')}`
+    ? `https://wa.me/${phoneNumber.replace(/\D/g, "")}`
     : null;
   const socialLinks = [
-    { label: 'LinkedIn', href: linkedinUrl },
-    { label: 'GitHub', href: githubUrl },
-    { label: 'X', href: xUrl },
-  ].filter((link): link is { label: string; href: string } => Boolean(link.href));
+    { label: "LinkedIn", href: linkedinUrl },
+    { label: "GitHub", href: githubUrl },
+    { label: "X", href: xUrl },
+  ].filter((link): link is { label: string; href: string } =>
+    Boolean(link.href),
+  );
 
   return (
     <Card className="rounded-[1.5rem] border-brand-green/28 bg-[linear-gradient(180deg,rgba(27,35,29,0.96),rgba(27,35,29,0.74))] p-5">
@@ -91,7 +92,9 @@ export function MemberCard({
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-full border border-brand-green/28 bg-brand-green/10 px-4 py-2 text-sm font-medium text-brand-off-white/76 transition-colors hover:border-brand-green hover:text-brand-off-white"
             >
-              <span className="text-xs uppercase tracking-[0.12em]">{link.label}</span>
+              <span className="text-xs uppercase tracking-[0.12em]">
+                {link.label}
+              </span>
             </a>
           ))}
         </div>

@@ -15,6 +15,7 @@ function makeUser(overrides: Partial<EnrichedPoolUser> = {}): EnrichedPoolUser {
     seniority: 'mid',
     interests: ['DeFi'],
     waiting_since: new Date(now - 10 * 60_000).toISOString(),
+    flex_macro_roles: [],
     ...overrides,
   };
 }
@@ -63,5 +64,73 @@ describe('scoreCandidate', () => {
     const candidate = makeUser();
     const score = scoreCandidate(candidate, [], maxWait, weights);
     expect(score).toBeGreaterThan(0);
+  });
+
+  it('flex role improves score when it adds diversity beyond primary', () => {
+    const team = [makeUser({ macro_role: 'business_gtm' })];
+    const flexCandidate = makeUser({
+      macro_role: 'business_gtm',
+      flex_macro_roles: ['engineering'],
+    });
+    const pureCandidate = makeUser({
+      macro_role: 'business_gtm',
+      flex_macro_roles: [],
+    });
+    const flexScore = scoreCandidate(flexCandidate, team, maxWait, weights);
+    const pureScore = scoreCandidate(pureCandidate, team, maxWait, weights);
+    expect(flexScore).toBeGreaterThan(pureScore);
+  });
+
+  it('real primary scores higher than flex for same diversity', () => {
+    const team = [makeUser({ macro_role: 'business_gtm' })];
+    const realEngineer = makeUser({
+      macro_role: 'engineering',
+      flex_macro_roles: [],
+    });
+    const flexEngineer = makeUser({
+      macro_role: 'business_gtm',
+      flex_macro_roles: ['engineering'],
+    });
+    const realScore = scoreCandidate(realEngineer, team, maxWait, weights);
+    const flexScore = scoreCandidate(flexEngineer, team, maxWait, weights);
+    expect(realScore).toBeGreaterThan(flexScore);
+  });
+
+  it('second flex-engineer gets no bonus when first flex already covers engineering', () => {
+    const teamMember = makeUser({
+      macro_role: 'business_gtm',
+      flex_macro_roles: ['engineering'],
+    });
+    const team = [teamMember];
+    const secondFlex = makeUser({
+      macro_role: 'business_gtm',
+      flex_macro_roles: ['engineering'],
+    });
+    const noFlex = makeUser({
+      macro_role: 'business_gtm',
+      flex_macro_roles: [],
+    });
+    const secondFlexScore = scoreCandidate(secondFlex, team, maxWait, weights);
+    const noFlexScore = scoreCandidate(noFlex, team, maxWait, weights);
+    expect(secondFlexScore).toBe(noFlexScore);
+  });
+
+  it('real engineer still gets new-role bonus even when flex covers engineering', () => {
+    const teamMember = makeUser({
+      macro_role: 'business_gtm',
+      flex_macro_roles: ['engineering'],
+    });
+    const team = [teamMember];
+    const realEngineer = makeUser({
+      macro_role: 'engineering',
+      flex_macro_roles: [],
+    });
+    const pureBusinessCandidate = makeUser({
+      macro_role: 'business_gtm',
+      flex_macro_roles: [],
+    });
+    const realScore = scoreCandidate(realEngineer, team, maxWait, weights);
+    const pureScore = scoreCandidate(pureBusinessCandidate, team, maxWait, weights);
+    expect(realScore).toBeGreaterThan(pureScore);
   });
 });

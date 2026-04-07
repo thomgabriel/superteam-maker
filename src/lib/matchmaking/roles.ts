@@ -16,6 +16,11 @@ export const ROLE_TO_MACRO: Record<string, MacroRole> = {
   'Arquiteto(a) / Urbanismo': 'business_gtm',
   'Professor(a) / Educação': 'business_gtm',
   'Outro': 'business_gtm',
+  // Secondary-only roles
+  'Marketing / Growth': 'business_gtm',
+  'Biz Dev': 'business_gtm',
+  'Comunidade / Conteúdo': 'business_gtm',
+  'Operações / Finanças': 'business_gtm',
 };
 
 export function getMacroRole(specificRole: string): MacroRole {
@@ -24,4 +29,21 @@ export function getMacroRole(specificRole: string): MacroRole {
     throw new Error(`Unknown role: ${specificRole}`);
   }
   return macro;
+}
+
+export function getFlexMacroRoles(
+  primaryRole: string,
+  secondaryRoles: string[],
+): MacroRole[] {
+  const primaryMacro = ROLE_TO_MACRO[primaryRole];
+  const flexMacros = new Set<MacroRole>();
+
+  for (const role of secondaryRoles) {
+    const macro = ROLE_TO_MACRO[role];
+    if (macro && macro !== primaryMacro) {
+      flexMacros.add(macro);
+    }
+  }
+
+  return [...flexMacros];
 }

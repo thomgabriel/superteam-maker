@@ -16,6 +16,7 @@ function makePoolUser(overrides: Partial<EnrichedPoolUser> = {}): EnrichedPoolUs
     seniority: 'mid',
     interests: ['DeFi'],
     waiting_since: new Date(now - counter * 60_000).toISOString(),
+    flex_macro_roles: [],
     ...overrides,
   };
 }

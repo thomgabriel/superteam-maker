@@ -13,6 +13,7 @@ function makeUser(id: string): EnrichedPoolUser {
     seniority: 'mid',
     interests: ['DeFi'],
     waiting_since: new Date().toISOString(),
+    flex_macro_roles: [],
   };
 }
 

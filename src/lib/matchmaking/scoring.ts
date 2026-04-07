@@ -1,5 +1,6 @@
 import type { Seniority, EnrichedPoolUser } from '@/types/database';
 import type { ScoringWeights } from './config';
+import { FLEX_DISCOUNT } from './config';
 
 const SENIORITY_ORDER: Seniority[] = ['beginner', 'junior', 'mid', 'senior'];
 
@@ -15,14 +16,12 @@ function averageSeniority(members: EnrichedPoolUser[]): Seniority {
   return SENIORITY_ORDER[Math.round(avg)];
 }
 
-export function scoreCandidate(
-  candidate: EnrichedPoolUser,
-  currentTeam: EnrichedPoolUser[],
-  maxWaitMs: number,
-  weights: ScoringWeights,
+function computeRoleScore(
+  candidateMacro: string,
+  teamRoles: Set<string>,
+  teamSize: number,
 ): number {
-  const teamMacroRoles = new Set(currentTeam.map((m) => m.macro_role));
-  const withCandidate = new Set([...teamMacroRoles, candidate.macro_role]);
+  const withCandidate = new Set([...teamRoles, candidateMacro]);
 
   let roleScore: number;
   const hasEngineering = withCandidate.has('engineering');
@@ -36,8 +35,43 @@ export function scoreCandidate(
     roleScore = 20;
   }
 
-  if (!teamMacroRoles.has(candidate.macro_role) && currentTeam.length > 0) {
+  if (!teamRoles.has(candidateMacro) && teamSize > 0) {
     roleScore = Math.min(100, roleScore + 20);
+  }
+
+  return roleScore;
+}
+
+export function scoreCandidate(
+  candidate: EnrichedPoolUser,
+  currentTeam: EnrichedPoolUser[],
+  maxWaitMs: number,
+  weights: ScoringWeights,
+): number {
+  // Primary roles only — used for scoring primary candidates
+  const teamPrimaryRoles = new Set(currentTeam.map((m) => m.macro_role));
+
+  // Full coverage (primary + flex) — used to skip redundant flex bonuses
+  const teamCoverageRoles = new Set<string>();
+  for (const m of currentTeam) {
+    teamCoverageRoles.add(m.macro_role);
+    for (const flex of m.flex_macro_roles) {
+      teamCoverageRoles.add(flex);
+    }
+  }
+
+  // Primary role score (uses primary roles only)
+  const primaryScore = computeRoleScore(candidate.macro_role, teamPrimaryRoles, currentTeam.length);
+
+  // Flex role score: try each flex macro against coverage, take the best delta
+  let roleScore = primaryScore;
+  for (const flexMacro of candidate.flex_macro_roles) {
+    if (teamCoverageRoles.has(flexMacro)) continue;
+    const simulatedScore = computeRoleScore(flexMacro, teamCoverageRoles, currentTeam.length);
+    if (simulatedScore > primaryScore) {
+      const flexAdjusted = primaryScore + (simulatedScore - primaryScore) * FLEX_DISCOUNT;
+      roleScore = Math.max(roleScore, flexAdjusted);
+    }
   }
 
   const teamAvgSeniority = averageSeniority(currentTeam);

@@ -6,6 +6,7 @@ import { trackEvent } from '@/lib/analytics.server';
 import { sendMatchNotification } from '@/lib/email';
 import { scoreCandidate } from './scoring';
 import { generateUniqueTeamName } from './team-names';
+import { getFlexMacroRoles } from './roles';
 
 interface RunMatchmakingJobOptions {
   triggerSource: 'cron' | 'admin';
@@ -37,6 +38,7 @@ interface WaitingPoolRow {
         macro_role: EnrichedPoolUser['macro_role'];
         seniority: EnrichedPoolUser['seniority'];
         profile_interests: { interest: string }[];
+        profile_roles: { role: string }[];
       }
     | {
         name: string;
@@ -44,6 +46,7 @@ interface WaitingPoolRow {
         macro_role: EnrichedPoolUser['macro_role'];
         seniority: EnrichedPoolUser['seniority'];
         profile_interests: { interest: string }[];
+        profile_roles: { role: string }[];
       }[];
 }
 
@@ -57,6 +60,7 @@ interface TeamContextMemberRow {
         macro_role: EnrichedPoolUser['macro_role'];
         seniority: EnrichedPoolUser['seniority'];
         profile_interests: { interest: string }[];
+        profile_roles: { role: string }[];
       }
     | {
         name: string;
@@ -64,6 +68,7 @@ interface TeamContextMemberRow {
         macro_role: EnrichedPoolUser['macro_role'];
         seniority: EnrichedPoolUser['seniority'];
         profile_interests: { interest: string }[];
+        profile_roles: { role: string }[];
       }[];
 }
 
@@ -104,6 +109,10 @@ function normalizeEnrichedUser(
     throw new Error(`Missing profile payload for user ${entry.user_id}`);
   }
 
+  const secondaryRoles = ('profile_roles' in profile && Array.isArray(profile.profile_roles))
+    ? profile.profile_roles.map((r) => r.role)
+    : [];
+
   return {
     user_id: entry.user_id,
     profile_id: 'profile_id' in entry ? entry.profile_id : fallbackProfileId,
@@ -113,6 +122,7 @@ function normalizeEnrichedUser(
     seniority: profile.seniority,
     interests: profile.profile_interests.map((interest) => interest.interest),
     waiting_since: waitingSince,
+    flex_macro_roles: getFlexMacroRoles(profile.primary_role, secondaryRoles),
   };
 }
 
@@ -235,7 +245,8 @@ async function performMaintenance(supabase: SupabaseClient): Promise<Maintenance
             primary_role,
             macro_role,
             seniority,
-            profile_interests (interest)
+            profile_interests (interest),
+            profile_roles (role)
           )
         `)
         .eq('status', 'waiting')
@@ -251,7 +262,8 @@ async function performMaintenance(supabase: SupabaseClient): Promise<Maintenance
             primary_role,
             macro_role,
             seniority,
-            profile_interests (interest)
+            profile_interests (interest),
+            profile_roles (role)
           )
         `)
         .eq('team_id', member.team_id)
@@ -349,7 +361,8 @@ async function fetchWaitingPool(supabase: SupabaseClient) {
         primary_role,
         macro_role,
         seniority,
-        profile_interests (interest)
+        profile_interests (interest),
+        profile_roles (role)
       )
     `)
     .eq('status', 'waiting')

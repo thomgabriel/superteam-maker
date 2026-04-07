@@ -136,4 +136,5 @@ export interface EnrichedPoolUser {
   seniority: Seniority;
   interests: string[];
   waiting_since: string;
+  flex_macro_roles: MacroRole[];
 }
