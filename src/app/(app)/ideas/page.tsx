@@ -41,12 +41,12 @@ export default async function IdeasPage() {
         <section className="pb-10 pt-4">
           <div className="max-w-3xl">
             <p className="inline-flex rounded-full border border-brand-yellow/30 bg-brand-yellow/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-brand-yellow">
-              Powered by Colosseum Copilot
+              Projetos reais do Colosseum
             </p>
 
             <h1 className="mt-6 font-heading text-4xl font-bold leading-[0.96] tracking-tight sm:text-5xl lg:text-6xl">
               Ideias para tirar o time
-              <span className="block text-brand-emerald">do branco rapido</span>
+              <span className="block text-brand-emerald">do branco rápido</span>
             </h1>
           </div>
         </section>
@@ -59,7 +59,7 @@ export default async function IdeasPage() {
             </p>
             <p className="mt-3 max-w-2xl text-base leading-8 text-brand-off-white/70">
               Busque projetos reais submetidos em hackathons Colosseum para
-              encontrar referencias, padroes e possiveis caminhos para o seu
+              encontrar referências, padrões e possíveis caminhos para o seu
               time.
             </p>
             <div className="mt-4 flex gap-4">
@@ -69,7 +69,7 @@ export default async function IdeasPage() {
                 rel="noreferrer"
                 className="text-xs text-brand-off-white/42 underline-offset-2 hover:text-brand-off-white/70 hover:underline"
               >
-                Docs
+                Sobre o acervo
               </a>
               <a
                 href="https://github.com/ColosseumOrg/colosseum-copilot"
@@ -77,7 +77,7 @@ export default async function IdeasPage() {
                 rel="noreferrer"
                 className="text-xs text-brand-off-white/42 underline-offset-2 hover:text-brand-off-white/70 hover:underline"
               >
-                GitHub
+                Código aberto
               </a>
             </div>
           </Card>
@@ -95,7 +95,7 @@ export default async function IdeasPage() {
           ) : (
             <div className="rounded-2xl border border-brand-green/20 bg-brand-green/8 px-8 py-12 text-center">
               <p className="text-sm text-brand-off-white/52">
-                Nao foi possivel carregar projetos agora. Tente novamente em
+                Não foi possível carregar projetos agora. Tente novamente em
                 alguns minutos.
               </p>
             </div>

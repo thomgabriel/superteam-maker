@@ -36,17 +36,17 @@ export async function claimLeadership(teamId: string) {
   await trackEvent({
     event: 'leader_claimed',
     userId: user.id,
-    route: `/equipe/${teamId}`,
+    route: `/team/${teamId}`,
     properties: { team_id: teamId },
   });
   await trackEvent({
     event: 'team_activated',
     userId: user.id,
-    route: `/equipe/${teamId}`,
+    route: `/team/${teamId}`,
     properties: { team_id: teamId },
   });
 
-  revalidatePath(`/equipe/${teamId}`);
+  revalidatePath(`/team/${teamId}`);
   return { success: true };
 }
 
@@ -85,6 +85,6 @@ export async function updateTeamProfile(
     return { success: false, message: error.message };
   }
 
-  revalidatePath(`/equipe/${teamId}`);
+  revalidatePath(`/team/${teamId}`);
   return { success: true };
 }

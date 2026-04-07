@@ -230,7 +230,7 @@ export default async function AdminPage({
   }
 
   if (!isAdminUser(user)) {
-    redirect("/fila");
+    redirect("/queue");
   }
 
   const [{ userId, teamId }, dashboard] = await Promise.all([
@@ -269,28 +269,28 @@ export default async function AdminPage({
         <section className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-start">
           <Card className="rounded-[2rem] border-brand-green/30 bg-[linear-gradient(180deg,rgba(27,35,29,0.96),rgba(27,35,29,0.74))] p-6 sm:p-7">
             <p className="inline-flex rounded-full border border-brand-yellow/30 bg-brand-yellow/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-brand-yellow">
-              Operacoes internas
+              Operações internas
             </p>
             <h1 className="mt-5 font-heading text-4xl font-bold leading-[0.96] tracking-tight sm:text-5xl">
               Painel para acompanhar
               <span className="block text-brand-emerald">fila, times e rodadas</span>
             </h1>
             <p className="mt-5 max-w-2xl text-base leading-8 text-brand-off-white/70">
-              Aqui a leitura precisa ser rapida: quantas pessoas estao esperando,
-              como os times estao saindo e o que aconteceu nas ultimas execucoes
+              Aqui a leitura precisa ser rápida: quantas pessoas estão esperando,
+              como os times estão saindo e o que aconteceu nas últimas execuções
               de matchmaking.
             </p>
           </Card>
 
           <Card className="rounded-[2rem] border-brand-yellow/24 bg-[linear-gradient(135deg,rgba(255,210,63,0.10),rgba(27,35,29,0.96))] p-6 sm:p-7">
             <p className="text-xs uppercase tracking-[0.18em] text-brand-yellow/82">
-              Acoes
+              Ações
             </p>
             <h2 className="mt-3 font-heading text-2xl font-semibold">
               Disparar rodada e recarregar leitura.
             </h2>
             <p className="mt-3 text-sm leading-7 text-brand-off-white/68">
-              Use o disparo manual quando voce quiser forcar uma nova rodada e
+              Use o disparo manual quando você quiser forçar uma nova rodada e
               depois atualize o painel para conferir o efeito.
             </p>
             <div className="mt-6 space-y-4">
@@ -323,7 +323,7 @@ export default async function AdminPage({
               tone: "text-brand-off-white",
             },
             {
-              label: "Execucoes registradas",
+              label: "Execuções registradas",
               value: dashboard.recentRuns.length,
               tone: "text-brand-off-white",
             },
@@ -349,7 +349,7 @@ export default async function AdminPage({
                 Fila
               </p>
               <h2 className="mt-2 font-heading text-2xl font-semibold">
-                Quem esta esperando ha mais tempo
+                Quem está esperando há mais tempo
               </h2>
             </div>
             <div className="space-y-3">
@@ -382,7 +382,7 @@ export default async function AdminPage({
                 ))
               ) : (
                 <p className="text-sm text-brand-off-white/60">
-                  Ninguem aguardando no momento.
+                  Ninguém aguardando no momento.
                 </p>
               )}
             </div>
@@ -394,7 +394,7 @@ export default async function AdminPage({
                 Matchmaking
               </p>
               <h2 className="mt-2 font-heading text-2xl font-semibold">
-                Execucoes recentes
+                Execuções recentes
               </h2>
             </div>
             <div className="space-y-3">
@@ -427,7 +427,7 @@ export default async function AdminPage({
                 ))
               ) : (
                 <p className="text-sm text-brand-off-white/60">
-                  Ainda nao existem execucoes registradas.
+                  Ainda não existem execuções registradas.
                 </p>
               )}
             </div>
@@ -474,7 +474,7 @@ export default async function AdminPage({
             <div className="grid gap-4 border-t border-brand-green/18 pt-4 lg:grid-cols-2">
               <div className="space-y-3">
                 <h3 className="font-heading text-lg font-semibold text-brand-off-white">
-                  Pendentes sem lider
+                  Pendentes sem líder
                 </h3>
                 {dashboard.pendingTeams.length > 0 ? (
                   dashboard.pendingTeams.map((team) => (
@@ -490,7 +490,7 @@ export default async function AdminPage({
                   ))
                 ) : (
                   <p className="text-sm text-brand-off-white/60">
-                    Nenhum time pendente sem lider.
+                    Nenhum time pendente sem líder.
                   </p>
                 )}
               </div>
@@ -523,16 +523,16 @@ export default async function AdminPage({
           <Card className="space-y-5 rounded-[2rem] p-6">
             <div>
               <p className="text-xs uppercase tracking-[0.18em] text-brand-off-white/42">
-                Inspecao
+                Inspeção
               </p>
               <h2 className="mt-2 font-heading text-2xl font-semibold">
-                Buscar usuario ou time
+                Buscar usuário ou time
               </h2>
             </div>
 
             <form action="/admin" className="space-y-3">
               <label className="block text-sm text-brand-off-white/62">
-                Usuario por ID
+                Usuário por ID
                 <Input
                   type="text"
                   name="userId"
@@ -541,7 +541,7 @@ export default async function AdminPage({
                 />
               </label>
               <Button size="sm" variant="primary">
-                Inspecionar usuario
+                Inspecionar usuário
               </Button>
             </form>
 
@@ -563,13 +563,13 @@ export default async function AdminPage({
             {userInspection && (
               <Card className="rounded-[1.25rem] border-brand-green/22 bg-brand-green/8 p-4 text-sm">
                 <p className="font-heading text-lg font-semibold">
-                  Estado do usuario
+                  Estado do usuário
                 </p>
                 <p className="mt-3 text-brand-off-white/64">
                   Estado: {userInspection.state}
                 </p>
                 <p className="text-brand-off-white/64">
-                  Perfil: {userInspection.profile ? "sim" : "nao"} · Pool:{" "}
+                  Perfil: {userInspection.profile ? "sim" : "não"} · Pool:{" "}
                   {userInspection.poolEntry?.status ?? "nenhum"}
                 </p>
                 <p className="text-brand-off-white/64">
@@ -591,7 +591,7 @@ export default async function AdminPage({
                     <div key={member.id} className="rounded-xl border border-brand-green/18 bg-brand-dark-green/60 px-3 py-3">
                       <p className="font-medium">
                         {member.profile.name}
-                        {member.is_leader ? " · lider" : ""}
+                        {member.is_leader ? " · líder" : ""}
                       </p>
                       <p className="mt-1 text-brand-off-white/50">
                         {member.profile.primary_role} · {member.status}

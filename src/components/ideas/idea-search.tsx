@@ -201,7 +201,7 @@ export function IdeaSearch({
       <div className="mb-4 flex items-center justify-between">
         <p className="text-sm text-brand-off-white/52">
           {error
-            ? "Nao foi possivel carregar projetos agora."
+            ? "Não foi possível carregar projetos agora."
             : searched
               ? `${total} projeto${total !== 1 ? "s" : ""} encontrado${total !== 1 ? "s" : ""}`
               : `${total} projetos no acervo`}

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { updateTeamProfile } from '@/app/(app)/equipe/[id]/actions';
+import { updateTeamProfile } from '@/app/(app)/team/[id]/actions';
 import type { Team } from '@/types/database';
 import { INTERESTS } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
@@ -34,16 +34,16 @@ export function LeaderPanel({ team }: { team: Team }) {
     <Card className="space-y-6 rounded-[1.75rem] border-brand-yellow/24 bg-[linear-gradient(135deg,rgba(255,210,63,0.10),rgba(27,35,29,0.96))] p-6">
       <div>
         <p className="text-xs uppercase tracking-[0.18em] text-brand-yellow/82">
-          Painel do lider
+          Painel do líder
         </p>
         <h3 className="mt-3 font-heading text-2xl font-semibold text-brand-off-white">
-          Organize o comeco do time.
+          Organize o começo do time.
         </h3>
       </div>
 
       <Card className="rounded-[1.25rem] border-brand-green/22 bg-brand-green/8 p-4">
         <p className="text-xs uppercase tracking-[0.16em] text-brand-off-white/46">
-          Proximos passos
+          Próximos passos
         </p>
         <ol className="mt-3 list-inside list-decimal space-y-2 text-sm leading-7 text-brand-off-white/72">
           <li>Crie um grupo no WhatsApp.</li>
@@ -72,13 +72,13 @@ export function LeaderPanel({ team }: { team: Team }) {
             type="text"
             value={ideaTitle}
             onChange={(e) => setIdeaTitle(e.target.value)}
-            placeholder="Titulo da ideia"
+            placeholder="Título da ideia"
             className="px-4 py-3 text-sm placeholder:text-brand-off-white/30"
           />
         </div>
         <div>
           <label className="mb-2 block text-xs font-medium uppercase tracking-[0.14em] text-brand-off-white/54">
-            Descricao
+            Descrição
           </label>
           <textarea
             value={ideaDescription}
@@ -104,7 +104,7 @@ export function LeaderPanel({ team }: { team: Team }) {
           </Select>
         </div>
         <Button onClick={handleSave} disabled={saving} variant="primary" size="lg" fullWidth>
-          {saving ? 'Salvando...' : saved ? 'Salvo!' : 'Salvar alteracoes'}
+          {saving ? 'Salvando...' : saved ? 'Salvo!' : 'Salvar alterações'}
         </Button>
       </div>
     </Card>

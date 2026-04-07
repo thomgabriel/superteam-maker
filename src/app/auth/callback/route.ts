@@ -47,7 +47,7 @@ export async function GET(request: Request) {
         return NextResponse.redirect(`${origin}${next ?? resolvedState.redirectPath}`);
       }
 
-      return NextResponse.redirect(`${origin}${next ?? '/perfil'}`);
+      return NextResponse.redirect(`${origin}${next ?? '/profile'}`);
     }
   }
 

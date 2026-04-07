@@ -71,12 +71,12 @@ export default async function TeamRevealPage() {
             </p>
             <Image src="/brand/logo/symbol-yellow.svg" alt="" width={56} height={56} className="mt-6" />
             <h1 className="mt-5 font-heading text-4xl font-bold leading-[0.96] tracking-tight text-brand-off-white sm:text-5xl lg:text-6xl">
-              Voce caiu em um
+              Você caiu em um
               <span className="block text-brand-yellow">time forte.</span>
             </h1>
             <p className="mt-5 max-w-xl text-base leading-8 text-brand-off-white/72 sm:text-lg">
-              O grupo ja esta pronto para se organizar. Agora e abrir a
-              conversa, alinhar a direcao e comecar a construir.
+              O grupo já está pronto para se organizar. Agora é abrir a
+              conversa, alinhar a direção e começar a construir.
             </p>
 
             <Card className="mt-8 rounded-[1.75rem] border-brand-yellow/24 bg-brand-yellow/10 px-6 py-5">
@@ -90,13 +90,13 @@ export default async function TeamRevealPage() {
 
             {!resolvedState.team.leader_id && (
               <p className="mt-5 text-sm leading-7 text-brand-off-white/60">
-                Ainda nao existe lider definido. Qualquer membro pode assumir
+                Ainda não existe líder definido. Qualquer membro pode assumir
                 esse papel assim que entrar na tela do time.
               </p>
             )}
 
             <div className="mt-8">
-              <Link href={`/equipe/${resolvedState.team.id}`} className="inline-flex w-full sm:w-auto">
+              <Link href={`/team/${resolvedState.team.id}`} className="inline-flex w-full sm:w-auto">
                 <Button variant="primary" size="lg" fullWidth>
                   Ver meu time
                 </Button>
@@ -111,7 +111,7 @@ export default async function TeamRevealPage() {
                   Membros confirmados
                 </p>
                 <h2 className="mt-2 font-heading text-2xl font-semibold text-brand-off-white">
-                  Quem vai construir com voce
+                  Quem vai construir com você
                 </h2>
               </div>
               <span className="rounded-full border border-brand-emerald/24 bg-brand-emerald/12 px-3 py-1 text-xs uppercase tracking-[0.14em] text-brand-emerald">

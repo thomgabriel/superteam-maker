@@ -29,13 +29,13 @@ export function getUserState(
 export function getRedirectPath(state: UserState, teamId?: string): string {
   switch (state) {
     case 'needs_profile':
-      return '/perfil';
+      return '/profile';
     case 'waiting_match':
-      return '/fila';
+      return '/queue';
     case 'matched':
-      return teamId ? `/equipe/${teamId}` : '/equipe/revelacao';
+      return teamId ? `/team/${teamId}` : '/team/reveal';
     case 'team_active':
-      return teamId ? `/equipe/${teamId}` : '/equipe/revelacao';
+      return teamId ? `/team/${teamId}` : '/team/reveal';
   }
 }
 

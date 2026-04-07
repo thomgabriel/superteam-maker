@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { claimLeadership } from '@/app/(app)/equipe/[id]/actions';
+import { claimLeadership } from '@/app/(app)/team/[id]/actions';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 
@@ -21,10 +21,10 @@ export function ClaimLeaderButton({ teamId }: { teamId: string }) {
   return (
     <Card className="rounded-[1.75rem] border-brand-yellow/24 bg-[linear-gradient(135deg,rgba(255,210,63,0.10),rgba(27,35,29,0.96))] p-5">
       <p className="text-xs uppercase tracking-[0.18em] text-brand-yellow/80">
-        Lideranca em aberto
+        Liderança em aberto
       </p>
       <h3 className="mt-3 font-heading text-2xl font-semibold text-brand-off-white">
-        Alguem do time precisa puxar o comeco.
+        Alguém do time precisa puxar o começo.
       </h3>
       <p className="mt-3 text-sm leading-7 text-brand-off-white/68">
         Quem assumir consegue organizar o grupo, definir a ideia inicial e

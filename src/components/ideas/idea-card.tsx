@@ -8,7 +8,7 @@ interface IdeaCardProps {
 }
 
 export function IdeaCard({ project, onOpen }: IdeaCardProps) {
-  const trackName = project.tracks[0]?.name ?? "General";
+  const trackName = project.tracks[0]?.name ?? "Geral";
   const tags = project.tags;
   const primaryTags = tags
     ? [...new Set([trackName, ...tags.primitives.slice(0, 2)])]
@@ -112,7 +112,7 @@ export function IdeaCard({ project, onOpen }: IdeaCardProps) {
           )}
           {project.team.count > 0 && (
             <span className="text-xs text-brand-off-white/32 sm:ml-auto">
-              {project.team.count} builder{project.team.count !== 1 ? "s" : ""}
+              {project.team.count} membro{project.team.count !== 1 ? "s" : ""}
             </span>
           )}
         </div>

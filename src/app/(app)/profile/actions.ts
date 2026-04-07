@@ -45,7 +45,7 @@ export async function createProfile(data: ProfileFormData) {
   if (error) {
     // Profile already exists — just redirect to queue
     if (error.message.includes('duplicate key') || error.message.includes('unique constraint')) {
-      redirect('/fila');
+      redirect('/queue');
     }
     throw new Error(`Erro ao criar perfil: ${error.message}`);
   }
@@ -54,15 +54,15 @@ export async function createProfile(data: ProfileFormData) {
   await trackEvent({
     event: 'profile_completed',
     userId: user.id,
-    route: '/perfil',
+    route: '/profile',
     properties: { primary_role: data.primary_role },
   });
   await trackEvent({
     event: 'entered_pool',
     userId: user.id,
-    route: '/fila',
+    route: '/queue',
     properties: { macro_role: macroRole },
   });
 
-  redirect('/fila');
+  redirect('/queue');
 }

@@ -21,7 +21,7 @@ Hackathon team formation platform. Next.js 15+ App Router, TypeScript, Tailwind 
 
 ## Conventions
 
-- **Language:** UI copy in Portuguese (pt-BR). Routes in Portuguese (`/perfil`, `/fila`, `/equipe`, `/ideias`). Code internals in English.
+- **Language:** UI copy in Portuguese (pt-BR). Routes and code internals in English (`/profile`, `/queue`, `/team`, `/ideas`). Legacy Portuguese URLs redirect to the English routes.
 - **Brand:** Superteam Brasil palette — Dark Green `#1b231d` base, Emerald `#008b4c` CTAs, Yellow `#ffd23f` highlights, Off-White `#f5e8ca` text. Archivo Semi Expanded headings, Inter body.
 - **Supabase queries:** Use `.maybeSingle()` not `.single()` when row may not exist. `.single()` throws on 0 rows.
 - **Dynamic pages:** All `(app)/` pages need `export const dynamic = 'force-dynamic'` to prevent stale redirects.

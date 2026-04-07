@@ -66,7 +66,7 @@ export async function sendMatchNotification(
               </div>
 
               <div style="margin-top:26px;">
-                <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://superteammaker.vercel.app'}/equipe/revelacao"
+                <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://superteammaker.vercel.app'}/team/reveal"
                    style="display:inline-block; padding:15px 24px; border-radius:12px; background:#008b4c; color:#f5e8ca; text-decoration:none; font-family:Archivo, Inter, Arial, sans-serif; font-size:16px; font-weight:700;">
                   Ver meu time
                 </a>

@@ -10,10 +10,10 @@ interface QueueStatusProps {
 }
 
 const TIPS = [
-  "O match considera funcao principal, senioridade e interesses em comum.",
-  "Os times saem em grupos de 3 a 4 pessoas, buscando combinacoes mais equilibradas.",
-  "Assim que o seu time ficar pronto, voce vai direto para a tela de revelacao.",
-  "Se quiser destravar repertorio enquanto espera, a aba Ideias ja esta liberada.",
+  "A formação considera função principal, senioridade e interesses em comum.",
+  "Os times saem em grupos de 3 a 4 pessoas, buscando combinações mais equilibradas.",
+  "Assim que o seu time ficar pronto, você vai direto para a tela de revelação.",
+  "Enquanto espera, você pode buscar inspiração na aba Ideias.",
 ];
 
 export function QueueStatus({ userId }: QueueStatusProps) {
@@ -34,7 +34,7 @@ export function QueueStatus({ userId }: QueueStatusProps) {
         },
         (payload) => {
           if (payload.new.status === "assigned") {
-            router.push("/equipe/revelacao");
+            router.push("/team/reveal");
           }
         },
       )
@@ -74,12 +74,12 @@ export function QueueStatus({ userId }: QueueStatusProps) {
 
         <h1 className="mt-8 font-heading text-4xl font-bold leading-[0.96] tracking-tight text-brand-off-white sm:text-5xl lg:text-6xl">
           Encontrando seu
-          <span className="block text-brand-emerald">time ideal...</span>
+          <span className="block text-brand-emerald">time compatível...</span>
         </h1>
 
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
           <p className="flex items-center text-sm leading-7 text-brand-off-white/60">
-            Voce recebera um email quando o time estiver pronto.
+            Quando o time estiver pronto, você vai direto para a tela de revelação.
           </p>
         </div>
 

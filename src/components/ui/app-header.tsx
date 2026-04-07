@@ -23,7 +23,7 @@ function getLinkClassName(active: boolean, tone: 'default' | 'admin' = 'default'
 
 export function AppHeader({ admin }: AppHeaderProps) {
   const pathname = usePathname();
-  const ideasActive = pathname.startsWith('/ideias');
+  const ideasActive = pathname.startsWith('/ideas');
   const adminActive = pathname.startsWith('/admin');
 
   return (
@@ -39,7 +39,7 @@ export function AppHeader({ admin }: AppHeaderProps) {
         </Link>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          <Link href="/ideias" className={getLinkClassName(ideasActive)}>
+          <Link href="/ideas" className={getLinkClassName(ideasActive)}>
             Ideias
           </Link>
           {admin && (

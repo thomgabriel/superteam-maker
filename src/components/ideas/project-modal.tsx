@@ -45,14 +45,14 @@ function ProjectTagGroup({
 }
 
 export function ProjectModal({ project, onClose }: ProjectModalProps) {
-  const trackName = project.tracks[0]?.name ?? "General";
+  const trackName = project.tracks[0]?.name ?? "Geral";
   const tags = project.tags;
   const links = [
     ["Colosseum", project.links.colosseum],
     ["GitHub", project.links.github],
     ["Demo", project.links.demo],
-    ["Pitch", project.links.presentation],
-    ["Tech demo", project.links.technicalDemo],
+    ["Apresentação", project.links.presentation],
+    ["Demo técnico", project.links.technicalDemo],
   ].filter((link): link is [string, string] => Boolean(link[1]));
 
   useEffect(() => {
@@ -119,7 +119,7 @@ export function ProjectModal({ project, onClose }: ProjectModalProps) {
           {project.prize && (
             <div className="rounded-lg border border-brand-yellow/20 bg-brand-yellow/8 px-4 py-4">
               <p className="text-xs uppercase tracking-[0.16em] text-brand-yellow/82">
-                Premio
+                Prêmio
               </p>
               <p className="mt-2 text-sm leading-6 text-brand-off-white/82">
                 {project.prize.name ?? project.prize.type}
@@ -131,7 +131,7 @@ export function ProjectModal({ project, onClose }: ProjectModalProps) {
               Time
             </p>
             <p className="mt-2 text-sm leading-6 text-brand-off-white/82">
-              {project.team.count} builder{project.team.count !== 1 ? "s" : ""}
+              {project.team.count} membro{project.team.count !== 1 ? "s" : ""}
             </p>
           </div>
           {project.cluster && (
@@ -149,7 +149,7 @@ export function ProjectModal({ project, onClose }: ProjectModalProps) {
         {project.evidence.length > 0 && (
           <div className="mt-6 rounded-[1.25rem] border border-brand-green/22 bg-brand-green/8 px-5 py-5">
             <p className="text-xs uppercase tracking-[0.16em] text-brand-off-white/42">
-              Por que apareceu nessa busca
+              Por que este projeto aparece aqui
             </p>
             <div className="mt-3 grid gap-3">
               {project.evidence.slice(0, 2).map((evidence) => (
@@ -171,7 +171,7 @@ export function ProjectModal({ project, onClose }: ProjectModalProps) {
               tags={tagList(tags.problemTags)}
             />
             <ProjectTagGroup
-              title="Solucoes"
+              title="Soluções"
               tags={tagList(tags.solutionTags)}
             />
             <ProjectTagGroup
@@ -179,7 +179,7 @@ export function ProjectModal({ project, onClose }: ProjectModalProps) {
               tags={tagList(tags.primitives)}
             />
             <ProjectTagGroup
-              title="Tech stack"
+              title="Tecnologias"
               tags={tagList(tags.techStack)}
             />
           </div>

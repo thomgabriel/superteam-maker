@@ -69,7 +69,7 @@ export function AuthForm() {
       setError('Código inválido. Tente novamente.');
       setLoading(false);
     } else {
-      window.location.href = '/perfil';
+      window.location.href = '/profile';
     }
   }
 

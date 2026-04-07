@@ -10,7 +10,7 @@ const BENEFITS = [
   {
     title: "Times equilibrados",
     description:
-      "Matching por role, senioridade e interesse para reduzir combinações aleatórias.",
+      "Formação por função, experiência e interesse para reduzir combinações aleatórias.",
   },
   {
     title: "Onboarding rápido",
@@ -20,7 +20,7 @@ const BENEFITS = [
   {
     title: "Pronto para construir",
     description:
-      "Assim que o match acontece, seu time já entra em modo execução via WhatsApp.",
+      "Assim que o time fica pronto, vocês já entram em modo execução via WhatsApp.",
   },
 ];
 
@@ -39,16 +39,16 @@ const STEPS = [
   },
   {
     step: "03",
-    title: "Receba seu match",
+    title: "Encontre seu time",
     description:
       "Quando o time estiver pronto, você entra e já começa a organizar a ideia.",
   },
 ];
 
 const IDEA_SIGNALS = [
-  "Referências para destravar o começo",
+  "Referências para começar a conversa",
   "Temas e categorias para o time se alinhar mais rápido",
-  "Inspiração sem virar marketplace confuso",
+  "Inspiração sem virar uma lista confusa",
 ];
 
 export default function LandingPage() {
@@ -96,7 +96,7 @@ export default function LandingPage() {
             />
             <div className="hidden items-center gap-3 sm:flex">
               <Link
-                href="/ideias"
+                href="/ideas"
                 className="rounded-full border border-brand-green/25 bg-brand-dark-green/55 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-brand-off-white/72 transition-colors hover:border-brand-green hover:text-brand-off-white"
               >
                 Ideias
@@ -113,7 +113,7 @@ export default function LandingPage() {
           <div className="mt-14 grid items-center gap-12 lg:grid-cols-[1.1fr_0.9fr]">
             <div className="max-w-2xl">
               <p className="inline-flex rounded-full border border-brand-yellow/30 bg-brand-yellow/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-brand-yellow">
-                Hackathon team formation
+                Formação de times para hackathon
               </p>
 
               <h1 className="mt-6 font-heading text-5xl font-bold leading-[0.95] tracking-tight sm:text-6xl lg:text-7xl">
@@ -124,12 +124,12 @@ export default function LandingPage() {
               </h1>
 
               <p className="mt-6 max-w-xl text-lg leading-8 text-brand-off-white/74 sm:text-xl">
-                Crie seu perfil, entre na fila e receba um match equilibrado
+                Crie seu perfil, entre na fila e receba um time compatível
                 para começar rápido.
               </p>
 
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                <Link href="/perfil" className="sm:min-w-52">
+                <Link href="/profile" className="sm:min-w-52">
                   <Button variant="primary" size="lg" fullWidth>
                     Quero encontrar meu time
                   </Button>
@@ -151,18 +151,18 @@ export default function LandingPage() {
           <Card className="grid gap-8 rounded-[2rem] border-brand-green/28 bg-[linear-gradient(135deg,rgba(0,139,76,0.12),rgba(27,35,29,0.96))] p-6 sm:p-8 lg:grid-cols-[0.9fr_1.1fr]">
             <div className="max-w-xl">
               <p className="text-sm uppercase tracking-[0.2em] text-brand-emerald/82">
-                Ideias para destravar
+                Ideias para começar
               </p>
               <h2 className="mt-3 font-heading text-3xl font-bold sm:text-4xl">
-                Match bom ajuda mais quando o time ja tem de onde partir.
+                Um bom time começa melhor quando já tem uma ideia para discutir.
               </h2>
               <p className="mt-4 text-base leading-8 text-brand-off-white/70">
-                A aba de ideias entra como apoio leve: referencias para inspirar
+                A aba de ideias entra como apoio leve: referências para inspirar
                 a primeira conversa, alinhar interesse e sair do branco sem
-                virar um feed caotico.
+                virar uma lista confusa.
               </p>
               <div className="mt-6">
-                <Link href="/ideias" className="inline-flex">
+                <Link href="/ideas" className="inline-flex">
                   <Button variant="accent" size="lg">
                     Ver ideias
                   </Button>
@@ -253,7 +253,7 @@ export default function LandingPage() {
               </h2>
               <p className="mt-5 max-w-md text-base leading-8 text-brand-off-white/68">
                 O fluxo é curto de propósito. Tudo aqui foi desenhado para
-                reduzir fricção entre descoberta, match e execução.
+                reduzir fricção entre descoberta, formação do time e execução.
               </p>
             </div>
 
@@ -306,9 +306,9 @@ export default function LandingPage() {
               </p>
 
               <div className="mt-8">
-                <Link href="/perfil" className="inline-flex">
+                <Link href="/profile" className="inline-flex">
                   <Button variant="secondary" size="lg">
-                    Entrar no matchmaking
+                    Entrar na fila
                   </Button>
                 </Link>
               </div>

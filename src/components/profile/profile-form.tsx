@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { createProfile, type ProfileFormData } from '@/app/(app)/perfil/actions';
+import { createProfile, type ProfileFormData } from '@/app/(app)/profile/actions';
 import { SPECIFIC_ROLES, INTERESTS } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -82,7 +82,7 @@ export function ProfileForm() {
             Seu perfil
           </p>
           <h2 className="mt-2 font-heading text-2xl font-bold">
-            Vamos montar sua base para o match
+            Conte o básico para formar seu time
           </h2>
         </div>
         <div className="hidden rounded-2xl border border-brand-green/25 bg-brand-dark-green/60 px-4 py-3 text-right sm:block">
@@ -108,7 +108,7 @@ export function ProfileForm() {
             Identidade
           </p>
           <p className="mt-2 text-sm text-brand-off-white/62">
-            O basico para o time saber quem voce e e como te chamar.
+            O básico para o time saber quem você é e como falar com você.
           </p>
         </div>
 
@@ -143,7 +143,7 @@ export function ProfileForm() {
             Sociais
           </p>
           <p className="mt-2 text-sm text-brand-off-white/62">
-            Opcional, mas ajuda seu time a entender melhor seu repertorio e te encontrar rapido.
+            Opcional, mas ajuda seu time a entender seu repertório e te encontrar rápido.
           </p>
         </div>
 
@@ -189,10 +189,10 @@ export function ProfileForm() {
       <Card className="space-y-4 border-brand-green/20 bg-brand-dark-green/45 p-5">
         <div>
           <p className="text-xs uppercase tracking-[0.16em] text-brand-emerald/80">
-            Como voce contribui
+            O que você faz melhor
           </p>
           <p className="mt-2 text-sm text-brand-off-white/62">
-            Sua funcao principal e a ancora do match. As outras ajudam a dar flexibilidade.
+            Sua função principal guia a formação do time. As outras ajudam a dar flexibilidade.
           </p>
         </div>
 
@@ -256,10 +256,10 @@ export function ProfileForm() {
       <Card className="space-y-4 border-brand-green/20 bg-brand-dark-green/45 p-5">
         <div>
           <p className="text-xs uppercase tracking-[0.16em] text-brand-emerald/80">
-            Onde voce quer construir
+            Onde você quer construir
           </p>
           <p className="mt-2 text-sm text-brand-off-white/62">
-            Esses temas ajudam a aproximar pessoas com repertorio e ambicao parecidos.
+            Esses temas ajudam a aproximar pessoas com repertório e ambição parecidos.
           </p>
         </div>
 

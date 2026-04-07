@@ -107,7 +107,7 @@ export default async function TeamPage({
 
   const STATUS_LABELS: Record<string, string> = {
     forming: 'Formando',
-    pending_activation: 'Aguardando ativação',
+    pending_activation: 'Organização inicial',
     active: 'Ativo',
     inactive: 'Inativo',
   };
@@ -136,14 +136,14 @@ export default async function TeamPage({
               {resolvedState.team.name}
             </h1>
             <p className="mt-4 max-w-xl text-base leading-8 text-brand-off-white/70">
-              Esse e o espaco do time para se organizar, escolher a direcao e
-              destravar o primeiro passo juntos.
+              Esse é o espaço do time para se organizar, escolher a direção e
+              começar o primeiro passo juntos.
             </p>
           </Card>
 
           <Card className="rounded-[2rem] border-brand-yellow/22 bg-[linear-gradient(135deg,rgba(255,210,63,0.08),rgba(27,35,29,0.96))] p-6 sm:p-7">
             <p className="text-xs uppercase tracking-[0.18em] text-brand-yellow/82">
-              Contexto do time
+              Ideia do time
             </p>
             {resolvedState.team.idea_title ? (
               <>
@@ -164,7 +164,7 @@ export default async function TeamPage({
             ) : (
               <>
                 <h2 className="mt-4 font-heading text-2xl font-semibold text-brand-off-white">
-                  A ideia ainda nao foi definida.
+                  A ideia ainda não foi definida.
                 </h2>
                 <p className="mt-3 text-sm leading-7 text-brand-off-white/70">
                   Usem esse momento para alinhar o problema, o formato do demo e
@@ -182,7 +182,7 @@ export default async function TeamPage({
                 Time
               </p>
               <h2 className="mt-2 font-heading text-3xl font-semibold text-brand-off-white">
-                Quem esta com voce nessa rodada
+                Quem está com você nessa rodada
               </h2>
             </div>
 
@@ -212,7 +212,7 @@ export default async function TeamPage({
             {!isLeader && resolvedState.team.idea_title && (
               <Card className="rounded-[1.75rem] border-brand-green/24 bg-brand-dark-green/72 p-5">
                 <p className="text-xs uppercase tracking-[0.18em] text-brand-off-white/42">
-                  Direcao atual
+                  Direção atual
                 </p>
                 <h3 className="mt-3 font-heading text-2xl font-semibold text-brand-off-white">
                   {resolvedState.team.idea_title}

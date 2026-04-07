@@ -44,9 +44,9 @@ describe('getUserState', () => {
 
 describe('getRedirectPath', () => {
   it('maps states to correct paths', () => {
-    expect(getRedirectPath('needs_profile')).toBe('/perfil');
-    expect(getRedirectPath('waiting_match')).toBe('/fila');
-    expect(getRedirectPath('matched')).toBe('/equipe/revelacao');
-    expect(getRedirectPath('team_active', 'team-123')).toBe('/equipe/team-123');
+    expect(getRedirectPath('needs_profile')).toBe('/profile');
+    expect(getRedirectPath('waiting_match')).toBe('/queue');
+    expect(getRedirectPath('matched')).toBe('/team/reveal');
+    expect(getRedirectPath('team_active', 'team-123')).toBe('/team/team-123');
   });
 });
