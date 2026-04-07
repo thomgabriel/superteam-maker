@@ -49,15 +49,19 @@ export async function resolveAuthenticatedUserState(): Promise<ResolvedUserState
     return null;
   }
 
+  return resolveUserStateForUserId(user.id);
+}
+
+export async function resolveUserStateForUserId(userId: string): Promise<ResolvedUserState> {
   const db = await createServiceRoleClient();
 
   const [{ data: profile }, { data: poolEntry }, { data: teamMember }] = await Promise.all([
-    db.from('profiles').select('*').eq('user_id', user.id).maybeSingle<Profile>(),
-    db.from('matchmaking_pool').select('*').eq('user_id', user.id).maybeSingle<MatchmakingPoolEntry>(),
+    db.from('profiles').select('*').eq('user_id', userId).maybeSingle<Profile>(),
+    db.from('matchmaking_pool').select('*').eq('user_id', userId).maybeSingle<MatchmakingPoolEntry>(),
     db
       .from('team_members')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .eq('status', 'active')
       .maybeSingle<TeamMember>(),
   ]);
@@ -71,7 +75,7 @@ export async function resolveAuthenticatedUserState(): Promise<ResolvedUserState
   const state = getUserState(profile ?? null, poolEntry ?? null, teamMember ?? null, team);
 
   return {
-    userId: user.id,
+    userId,
     state,
     redirectPath: getRedirectPath(state, team?.id),
     profile: profile ?? null,
@@ -80,4 +84,3 @@ export async function resolveAuthenticatedUserState(): Promise<ResolvedUserState
     team,
   };
 }
-

@@ -3,11 +3,12 @@ import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { persistAttributionForUser } from '@/lib/attribution';
 import { trackEvent } from '@/lib/analytics.server';
+import { resolveUserStateForUserId } from '@/lib/user-state';
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get('code');
-  const next = searchParams.get('next') ?? '/perfil';
+  const next = searchParams.get('next');
 
   if (code) {
     const cookieStore = await cookies();
@@ -41,9 +42,12 @@ export async function GET(request: Request) {
           userId: user.id,
           route: '/auth/callback',
         });
+
+        const resolvedState = await resolveUserStateForUserId(user.id);
+        return NextResponse.redirect(`${origin}${next ?? resolvedState.redirectPath}`);
       }
 
-      return NextResponse.redirect(`${origin}${next}`);
+      return NextResponse.redirect(`${origin}${next ?? '/perfil'}`);
     }
   }
 
