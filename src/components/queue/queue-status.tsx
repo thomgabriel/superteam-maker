@@ -79,7 +79,7 @@ export function QueueStatus({ userId }: QueueStatusProps) {
 
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
           <p className="flex items-center text-sm leading-7 text-brand-off-white/60">
-            Quando o time estiver pronto, você vai direto para a tela de revelação.
+            Voce recebera um email quando o time estiver pronto.
           </p>
         </div>
 
