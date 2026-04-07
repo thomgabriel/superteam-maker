@@ -9,21 +9,21 @@ describe('getMacroRole', () => {
     }
   });
 
-  it('returns engineering for developer roles', () => {
-    expect(getMacroRole('Frontend Developer')).toBe('engineering');
-    expect(getMacroRole('Backend Developer')).toBe('engineering');
-    expect(getMacroRole('AI / ML Engineer')).toBe('engineering');
+  it('returns engineering for tech roles', () => {
+    expect(getMacroRole('Desenvolvedor(a) de Software')).toBe('engineering');
+    expect(getMacroRole('Cientista de Dados / IA')).toBe('engineering');
+    expect(getMacroRole('Analista de Sistemas')).toBe('engineering');
   });
 
   it('returns design for designer roles', () => {
-    expect(getMacroRole('Product Designer')).toBe('design');
-    expect(getMacroRole('Visual Designer')).toBe('design');
+    expect(getMacroRole('Designer de Produto')).toBe('design');
+    expect(getMacroRole('Designer Visual / Brand')).toBe('design');
   });
 
-  it('returns business_gtm for business roles', () => {
-    expect(getMacroRole('Biz Dev')).toBe('business_gtm');
+  it('returns business_gtm for business/domain roles', () => {
+    expect(getMacroRole('Advogado(a) / Direito')).toBe('business_gtm');
     expect(getMacroRole('Product Manager')).toBe('business_gtm');
-    expect(getMacroRole('Marketer')).toBe('business_gtm');
+    expect(getMacroRole('Médico(a) / Saúde')).toBe('business_gtm');
   });
 
   it('throws for unknown role', () => {

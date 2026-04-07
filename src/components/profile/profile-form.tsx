@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { createProfile, type ProfileFormData } from '@/app/(app)/profile/actions';
-import { SPECIFIC_ROLES, INTERESTS } from '@/lib/constants';
+import { SPECIFIC_ROLES, SECONDARY_ROLES, INTERESTS } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
@@ -70,7 +70,7 @@ export function ProfileForm() {
     yearsExperienceInput.trim() !== '' &&
     form.interests.length > 0;
 
-  const secondaryRoleOptions = SPECIFIC_ROLES.filter(
+  const secondaryRoleOptions = SECONDARY_ROLES.filter(
     (r) => r !== form.primary_role,
   );
 

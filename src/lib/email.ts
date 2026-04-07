@@ -1,6 +1,6 @@
 import { Resend } from 'resend';
 
-const FROM_EMAIL = 'SuperTeamMaker <noreply@updates.solarium.courses>';
+const FROM_EMAIL = 'SuperteamMaker <noreply@updates.solarium.courses>';
 
 function getResendClient() {
   const apiKey = process.env.RESEND_API_KEY;

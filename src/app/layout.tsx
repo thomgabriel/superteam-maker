@@ -16,7 +16,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "SuperTeamMaker | Monte seu time para o hackathon",
+  title: "SuperteamMaker | Monte seu time para o hackathon",
   description: "Encontre um time compatível para o hackathon em minutos.",
 };
 

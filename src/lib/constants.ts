@@ -1,38 +1,46 @@
 export const SPECIFIC_ROLES = [
-  'Software Engineer',
-  'Backend Developer',
-  'Frontend Developer',
-  'Protocol Engineer',
-  'AI / ML Engineer',
-  'Data Scientist',
-  'Game Developer',
-  'Mobile Developer',
-  'Systems Engineer',
-  'Hardware Engineer',
-  'Product Designer',
-  'Visual Designer',
-  'Biz Dev',
-  'Community Manager',
-  'Content Creator',
-  'Finance & Ops',
-  'Lawyer',
-  'Marketer',
+  'Desenvolvedor(a) de Software',
+  'Cientista de Dados / IA',
+  'Analista de Sistemas',
+  'Designer de Produto',
+  'Designer Visual / Brand',
+  'Administrador(a)',
+  'Advogado(a) / Direito',
+  'Médico(a) / Saúde',
+  'Economista / Finanças',
+  'Marketing / Comunicação',
   'Product Manager',
+  'Engenheiro(a)',
+  'Arquiteto(a) / Urbanismo',
+  'Professor(a) / Educação',
+  'Outro',
 ] as const;
 
 export type SpecificRole = typeof SPECIFIC_ROLES[number];
 
+export const SECONDARY_ROLES = [
+  'Desenvolvedor(a) de Software',
+  'Cientista de Dados / IA',
+  'Designer de Produto',
+  'Designer Visual / Brand',
+  'Product Manager',
+  'Marketing / Growth',
+  'Biz Dev',
+  'Comunidade / Conteúdo',
+  'Operações / Finanças',
+] as const;
+
 export const INTERESTS = [
   'DePIN',
   'DeFi',
-  'Payments',
+  'Pagamentos',
   'Gaming',
   'Social',
-  'Developer Infrastructure',
-  'Security Tools',
-  'Community DAOs',
+  'Infraestrutura Dev',
+  'Segurança',
+  'DAOs / Comunidades',
   'RWAs',
-  'Consumer / Other',
+  'Consumer / Outros',
 ] as const;
 
 export type Interest = typeof INTERESTS[number];
@@ -47,5 +55,5 @@ export const SENIORITY_LABELS: Record<string, string> = {
 export const MACRO_ROLE_LABELS: Record<string, string> = {
   engineering: 'Engenharia',
   design: 'Design',
-  business_gtm: 'Negócios / GTM',
+  business_gtm: 'Negócios & Domínio',
 };

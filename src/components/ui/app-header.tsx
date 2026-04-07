@@ -7,6 +7,8 @@ import { logoutAction } from '@/app/(app)/actions';
 
 interface AppHeaderProps {
   admin: boolean;
+  teamId: string | null;
+  statusPath: string | null;
 }
 
 function getLinkClassName(active: boolean, tone: 'default' | 'admin' = 'default') {
@@ -21,8 +23,11 @@ function getLinkClassName(active: boolean, tone: 'default' | 'admin' = 'default'
     : 'rounded-full border border-brand-green/25 bg-brand-dark-green/55 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-brand-off-white/62 transition-colors hover:border-brand-green hover:text-brand-off-white';
 }
 
-export function AppHeader({ admin }: AppHeaderProps) {
+export function AppHeader({ admin, teamId, statusPath }: AppHeaderProps) {
   const pathname = usePathname();
+  const teamActive = pathname.startsWith('/team');
+  const queueActive = pathname.startsWith('/queue');
+  const profileActive = pathname.startsWith('/profile');
   const ideasActive = pathname.startsWith('/ideas');
   const adminActive = pathname.startsWith('/admin');
 
@@ -32,13 +37,26 @@ export function AppHeader({ admin }: AppHeaderProps) {
         <Link href="/" className="transition-opacity hover:opacity-85">
           <Image
             src="/brand/logo/symbol.svg"
-            alt="SuperTeamMaker"
+            alt="SuperteamMaker"
             width={30}
             height={30}
           />
         </Link>
 
         <div className="flex items-center gap-2 sm:gap-3">
+          {teamId ? (
+            <Link href={`/team/${teamId}`} className={getLinkClassName(teamActive)}>
+              Time
+            </Link>
+          ) : statusPath === '/queue' ? (
+            <Link href="/queue" className={getLinkClassName(queueActive)}>
+              Fila
+            </Link>
+          ) : statusPath === '/profile' ? (
+            <Link href="/profile" className={getLinkClassName(profileActive)}>
+              Perfil
+            </Link>
+          ) : null}
           <Link href="/ideas" className={getLinkClassName(ideasActive)}>
             Ideias
           </Link>

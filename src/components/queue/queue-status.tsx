@@ -93,7 +93,7 @@ export function QueueStatus({ userId }: QueueStatusProps) {
           </p>
           <div className="mt-4">
             <a
-              href="https://arena.colosseum.org/signin"
+              href="https://arena.colosseum.org/signin?ref=criptosonhos"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center justify-center rounded-lg border border-brand-yellow/28 bg-brand-yellow/12 px-5 py-3 text-sm font-semibold text-brand-yellow transition-colors hover:bg-brand-yellow/18"

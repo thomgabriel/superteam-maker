@@ -61,9 +61,6 @@ export function MemberCard({
         <Tag selected tone="emerald" className="cursor-default" disabled>
           {MACRO_ROLE_LABELS[macroRole] ?? macroRole}
         </Tag>
-        <Tag className="cursor-default" disabled>
-          {SENIORITY_LABELS[seniority] ?? seniority}
-        </Tag>
       </div>
 
       {(showPhone && whatsappUrl) || socialLinks.length > 0 ? (
