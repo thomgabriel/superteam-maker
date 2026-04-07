@@ -1,7 +1,10 @@
 import Image from "next/image";
 import { Card } from "@/components/ui/card";
 import { searchProjects } from "@/lib/colosseum";
+import { CURATED_IDEAS } from "@/lib/curated-ideas";
+import { CuratedIdeasGrid } from "@/components/ideas/curated-ideas-grid";
 import { IdeaSearch } from "@/components/ideas/idea-search";
+import { IdeasTabs } from "@/components/ideas/ideas-tabs";
 import type { CopilotFacetBucket } from "@/types/colosseum";
 
 export const dynamic = "force-dynamic";
@@ -41,7 +44,7 @@ export default async function IdeasPage() {
         <section className="pb-10 pt-4">
           <div className="max-w-3xl">
             <p className="inline-flex rounded-full border border-brand-yellow/30 bg-brand-yellow/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-brand-yellow">
-              Projetos reais do Colosseum
+              Inspiração para o time
             </p>
 
             <h1 className="mt-6 font-heading text-4xl font-bold leading-[0.96] tracking-tight sm:text-5xl lg:text-6xl">
@@ -51,55 +54,61 @@ export default async function IdeasPage() {
           </div>
         </section>
 
-        {/* Attribution + intro */}
-        <section className="pb-6">
-          <Card className="rounded-[1.75rem] border-brand-yellow/20 bg-[linear-gradient(135deg,rgba(255,210,63,0.08),rgba(27,35,29,0.94)_42%,rgba(0,139,76,0.06))] p-6 sm:p-8">
-            <p className="text-sm uppercase tracking-[0.2em] text-brand-yellow/72">
-              Acervo Colosseum
-            </p>
-            <p className="mt-3 max-w-2xl text-base leading-8 text-brand-off-white/70">
-              Busque projetos reais submetidos em hackathons Colosseum para
-              encontrar referências, padrões e possíveis caminhos para o seu
-              time.
-            </p>
-            <div className="mt-4 flex gap-4">
-              <a
-                href="https://docs.colosseum.com/copilot/introduction"
-                target="_blank"
-                rel="noreferrer"
-                className="text-xs text-brand-off-white/42 underline-offset-2 hover:text-brand-off-white/70 hover:underline"
-              >
-                Sobre o acervo
-              </a>
-              <a
-                href="https://github.com/ColosseumOrg/colosseum-copilot"
-                target="_blank"
-                rel="noreferrer"
-                className="text-xs text-brand-off-white/42 underline-offset-2 hover:text-brand-off-white/70 hover:underline"
-              >
-                Código aberto
-              </a>
-            </div>
-          </Card>
-        </section>
-
-        {/* Search + Results */}
+        {/* Tabbed content */}
         <section>
-          {result.ok ? (
-            <IdeaSearch
-              initialProjects={projects}
-              initialTotal={totalFound}
-              hackathonFacets={hackathonFacets}
-              clusterFacets={clusterFacets}
-            />
-          ) : (
-            <div className="rounded-2xl border border-brand-green/20 bg-brand-green/8 px-8 py-12 text-center">
-              <p className="text-sm text-brand-off-white/52">
-                Não foi possível carregar projetos agora. Tente novamente em
-                alguns minutos.
-              </p>
-            </div>
-          )}
+          <IdeasTabs
+            curatedContent={
+              <CuratedIdeasGrid ideas={CURATED_IDEAS} />
+            }
+            colosseumContent={
+              <div>
+                <Card className="mb-6 rounded-[1.75rem] border-brand-yellow/20 bg-[linear-gradient(135deg,rgba(255,210,63,0.08),rgba(27,35,29,0.94)_42%,rgba(0,139,76,0.06))] p-6 sm:p-8">
+                  <p className="text-sm uppercase tracking-[0.2em] text-brand-yellow/72">
+                    Acervo Colosseum
+                  </p>
+                  <p className="mt-3 max-w-2xl text-base leading-8 text-brand-off-white/70">
+                    Busque projetos reais submetidos em hackathons Colosseum para
+                    encontrar referências, padrões e possíveis caminhos para o seu
+                    time.
+                  </p>
+                  <div className="mt-4 flex gap-4">
+                    <a
+                      href="https://docs.colosseum.com/copilot/introduction"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-xs text-brand-off-white/42 underline-offset-2 hover:text-brand-off-white/70 hover:underline"
+                    >
+                      Sobre o acervo
+                    </a>
+                    <a
+                      href="https://github.com/ColosseumOrg/colosseum-copilot"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-xs text-brand-off-white/42 underline-offset-2 hover:text-brand-off-white/70 hover:underline"
+                    >
+                      Código aberto
+                    </a>
+                  </div>
+                </Card>
+
+                {result.ok ? (
+                  <IdeaSearch
+                    initialProjects={projects}
+                    initialTotal={totalFound}
+                    hackathonFacets={hackathonFacets}
+                    clusterFacets={clusterFacets}
+                  />
+                ) : (
+                  <div className="rounded-2xl border border-brand-green/20 bg-brand-green/8 px-8 py-12 text-center">
+                    <p className="text-sm text-brand-off-white/52">
+                      Não foi possível carregar projetos agora. Tente novamente em
+                      alguns minutos.
+                    </p>
+                  </div>
+                )}
+              </div>
+            }
+          />
         </section>
       </div>
     </main>
