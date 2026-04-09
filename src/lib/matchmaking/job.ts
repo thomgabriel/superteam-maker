@@ -7,6 +7,7 @@ import { sendMatchNotification } from '@/lib/email';
 import { scoreCandidate } from './scoring';
 import { generateUniqueTeamName } from './team-names';
 import { getFlexMacroRoles } from './roles';
+import { logError, logInfo } from '@/lib/monitoring';
 
 interface RunMatchmakingJobOptions {
   triggerSource: 'cron' | 'admin';
@@ -397,9 +398,15 @@ function createSupabaseServiceClient() {
 export async function runMatchmakingJob(
   options: RunMatchmakingJobOptions,
 ): Promise<MatchmakingJobResult> {
+  const startedAt = Date.now();
   const supabase = options.supabase ?? createSupabaseServiceClient();
   const runId = await createMatchmakingRunRecord(supabase, options.triggerSource);
   const notes: string[] = [];
+
+  logInfo('matchmaking.job.started', {
+    triggerSource: options.triggerSource,
+    runId,
+  });
 
   try {
     const maintenance = await performMaintenance(supabase);
@@ -426,6 +433,18 @@ export async function runMatchmakingJob(
         replacements_performed: result.replacementsPerformed,
         notes: result.notes.join('; '),
         finished_at: new Date().toISOString(),
+      });
+
+      logInfo('matchmaking.job.completed', {
+        triggerSource: options.triggerSource,
+        runId,
+        durationMs: Date.now() - startedAt,
+        poolSize: result.poolSize,
+        teamsFormed: result.teamsFormed,
+        usersMatched: result.usersMatched,
+        replacementsPerformed: result.replacementsPerformed,
+        roundNumber: result.roundNumber,
+        notesCount: result.notes.length,
       });
 
       return result;
@@ -547,6 +566,18 @@ export async function runMatchmakingJob(
       finished_at: new Date().toISOString(),
     });
 
+    logInfo('matchmaking.job.completed', {
+      triggerSource: options.triggerSource,
+      runId,
+      durationMs: Date.now() - startedAt,
+      poolSize: result.poolSize,
+      teamsFormed: result.teamsFormed,
+      usersMatched: result.usersMatched,
+      replacementsPerformed: result.replacementsPerformed,
+      roundNumber: result.roundNumber,
+      notesCount: result.notes.length,
+    });
+
     return result;
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown matchmaking error';
@@ -554,6 +585,11 @@ export async function runMatchmakingJob(
       status: 'failed',
       error_message: message,
       finished_at: new Date().toISOString(),
+    });
+    logError('matchmaking.job.failed', error, {
+      triggerSource: options.triggerSource,
+      runId,
+      durationMs: Date.now() - startedAt,
     });
     throw error;
   }

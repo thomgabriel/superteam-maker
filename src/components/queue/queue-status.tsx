@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Card } from "@/components/ui/card";
@@ -19,7 +19,48 @@ const TIPS = [
 export function QueueStatus({ userId }: QueueStatusProps) {
   const router = useRouter();
   const [tipIndex, setTipIndex] = useState(0);
-  const supabase = createClient();
+  const [connectionMode, setConnectionMode] = useState<"realtime" | "polling">(
+    "realtime"
+  );
+  const supabase = useMemo(() => createClient(), []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function checkUserState() {
+      try {
+        const res = await fetch("/api/user-state", {
+          method: "GET",
+          cache: "no-store",
+        });
+
+        if (!res.ok) return;
+
+        const data = await res.json();
+        if (cancelled) return;
+
+        if (typeof data.redirectPath === "string" && data.redirectPath !== "/queue") {
+          router.push(data.redirectPath);
+        }
+      } catch {
+        // Keep the waiting experience calm if polling fails temporarily.
+      }
+    }
+
+    if (connectionMode !== "polling") {
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    checkUserState();
+    const pollingInterval = setInterval(checkUserState, 20_000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(pollingInterval);
+    };
+  }, [connectionMode, router]);
 
   useEffect(() => {
     const channel = supabase
@@ -38,7 +79,20 @@ export function QueueStatus({ userId }: QueueStatusProps) {
           }
         },
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === "SUBSCRIBED") {
+          setConnectionMode("realtime");
+          return;
+        }
+
+        if (
+          status === "CHANNEL_ERROR" ||
+          status === "TIMED_OUT" ||
+          status === "CLOSED"
+        ) {
+          setConnectionMode("polling");
+        }
+      });
 
     return () => {
       supabase.removeChannel(channel);
@@ -79,7 +133,7 @@ export function QueueStatus({ userId }: QueueStatusProps) {
 
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
           <p className="flex items-center text-sm leading-7 text-brand-off-white/60">
-            Voce recebera um email quando o time estiver pronto.
+            Você receberá um email quando o time estiver pronto.
           </p>
         </div>
 
@@ -105,10 +159,12 @@ export function QueueStatus({ userId }: QueueStatusProps) {
 
         <Card className="mt-8 min-h-[5rem] rounded-[1.5rem] border-brand-green/24 bg-brand-dark-green/64 px-6 py-5">
           <p className="text-xs uppercase tracking-[0.18em] text-brand-off-white/42">
-            Agora
+            {connectionMode === "realtime" ? "Agora" : "Atualização de apoio"}
           </p>
           <p className="mt-3 text-sm leading-7 text-brand-off-white/72 transition-opacity">
-            {TIPS[tipIndex]}
+            {connectionMode === "realtime"
+              ? TIPS[tipIndex]
+              : "Seguimos verificando seu status automaticamente enquanto a conexão em tempo real se recupera."}
           </p>
         </Card>
       </div>
