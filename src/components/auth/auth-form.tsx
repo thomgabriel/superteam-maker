@@ -11,8 +11,7 @@ import { Card } from '@/components/ui/card';
 
 export function AuthForm() {
   const [email, setEmail] = useState('');
-  const [otpSent, setOtpSent] = useState(false);
-  const [otp, setOtp] = useState('');
+  const [magicLinkSent, setMagicLinkSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const supabase = createClient();
@@ -21,7 +20,7 @@ export function AuthForm() {
   const authFailed = searchParams.get('error') === 'auth_failed';
   const displayError = error ?? (authFailed ? 'Não foi possível completar o login. Tente novamente.' : null);
 
-  function trackSignupStarted(method: 'google' | 'otp') {
+  function trackSignupStarted(method: 'google' | 'email') {
     void trackEvent({
       event: 'signup_started',
       route: '/auth',
@@ -44,10 +43,10 @@ export function AuthForm() {
     }
   }
 
-  async function handleSendOtp() {
+  async function handleSendMagicLink() {
     setLoading(true);
     setError(null);
-    trackSignupStarted('otp');
+    trackSignupStarted('email');
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
@@ -55,27 +54,11 @@ export function AuthForm() {
       },
     });
     if (error) {
-      setError('Erro ao enviar código. Verifique o email.');
+      setError('Erro ao enviar o link. Verifique o email e tente novamente.');
     } else {
-      setOtpSent(true);
+      setMagicLinkSent(true);
     }
     setLoading(false);
-  }
-
-  async function handleVerifyOtp() {
-    setLoading(true);
-    setError(null);
-    const { error } = await supabase.auth.verifyOtp({
-      email,
-      token: otp,
-      type: 'email',
-    });
-    if (error) {
-      setError('Código inválido. Tente novamente.');
-      setLoading(false);
-    } else {
-      window.location.href = '/profile';
-    }
   }
 
   return (
@@ -128,7 +111,7 @@ export function AuthForm() {
             <div className="h-px flex-1 bg-brand-green" />
           </div>
 
-          {!otpSent ? (
+          {!magicLinkSent ? (
             <div className="space-y-3">
               <Input
                 type="email"
@@ -138,37 +121,32 @@ export function AuthForm() {
                 className="py-4"
               />
               <Button
-                onClick={handleSendOtp}
+                onClick={handleSendMagicLink}
                 disabled={loading || !email}
                 variant="primary"
                 fullWidth
                 className="py-4"
               >
-                {loading ? 'Enviando...' : 'Enviar código'}
+                {loading ? 'Enviando...' : 'Entrar com email'}
               </Button>
             </div>
           ) : (
-            <div className="space-y-3">
-              <p className="text-sm text-brand-off-white/70">
-                Enviamos um código para <strong>{email}</strong>
+            <div className="space-y-3 text-center">
+              <p className="text-sm leading-7 text-brand-off-white/70">
+                Enviamos um link de acesso para <strong className="text-brand-off-white">{email}</strong>
               </p>
-              <Input
-                type="text"
-                placeholder="Código de verificação"
-                value={otp}
-                onChange={(e) => setOtp(e.target.value)}
-                className="py-4 text-center text-lg tracking-widest"
-                maxLength={6}
-              />
-              <Button
-                onClick={handleVerifyOtp}
-                disabled={loading || otp.length < 6}
-                variant="primary"
-                fullWidth
-                className="py-4"
+              <p className="text-xs text-brand-off-white/42">
+                Verifique sua caixa de entrada e clique no link para entrar.
+              </p>
+              <button
+                onClick={() => {
+                  setMagicLinkSent(false);
+                  setEmail('');
+                }}
+                className="mt-2 text-xs text-brand-emerald underline-offset-2 hover:underline"
               >
-                {loading ? 'Verificando...' : 'Verificar'}
-              </Button>
+                Usar outro email
+              </button>
             </div>
           )}
         </div>
