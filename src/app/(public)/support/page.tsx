@@ -11,11 +11,37 @@ import { LessonList } from "@/components/support/lesson-list";
 import { SuccessStories } from "@/components/support/success-stories";
 import { SupportTabs } from "@/components/support/support-tabs";
 import { PublicHeader } from "@/components/ui/public-header";
+import { createServerSupabaseClient, createServiceRoleClient } from "@/lib/supabase/server";
+import { isAdminUser } from "@/lib/admin";
+import { AppHeader } from "@/components/ui/app-header";
 
-export default function SupportPage() {
+export const dynamic = "force-dynamic";
+
+export default async function SupportPage() {
+  const supabase = await createServerSupabaseClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  let header;
+  if (user) {
+    const admin = isAdminUser(user);
+    const db = await createServiceRoleClient();
+    const [{ data: membership }, { data: pool }] = await Promise.all([
+      db.from('team_members').select('team_id').eq('user_id', user.id).eq('status', 'active').maybeSingle(),
+      db.from('matchmaking_pool').select('status').eq('user_id', user.id).maybeSingle(),
+    ]);
+    const teamId = membership?.team_id ?? null;
+    let statusPath: string | null = null;
+    if (!teamId) {
+      statusPath = pool?.status === 'waiting' ? '/queue' : '/profile';
+    }
+    header = <AppHeader admin={admin} teamId={teamId} statusPath={statusPath} />;
+  } else {
+    header = <PublicHeader />;
+  }
+
   return (
     <>
-    <PublicHeader />
+    {header}
     <main className="relative min-h-screen overflow-hidden px-4 pb-16 pt-6 sm:px-6 lg:px-8">
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute inset-x-0 top-0 h-[34rem] bg-[radial-gradient(circle_at_top,rgba(255,210,63,0.10),transparent_44%),radial-gradient(circle_at_18%_22%,rgba(0,139,76,0.20),transparent_28%),linear-gradient(180deg,#1b231d_0%,#162018_48%,#1b231d_100%)]" />
