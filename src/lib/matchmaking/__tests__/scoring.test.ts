@@ -10,7 +10,7 @@ function makeUser(overrides: Partial<EnrichedPoolUser> = {}): EnrichedPoolUser {
     user_id: 'u-' + Math.random().toString(36).slice(2),
     profile_id: 'p-' + Math.random().toString(36).slice(2),
     name: 'Test User',
-    primary_role: 'Frontend Developer',
+    primary_role: 'Desenvolvimento de Software',
     macro_role: 'engineering',
     seniority: 'mid',
     interests: ['DeFi'],

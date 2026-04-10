@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { createProfile, type ProfileFormData } from '@/app/(app)/profile/actions';
-import { SPECIFIC_ROLES, SECONDARY_ROLES, INTERESTS } from '@/lib/constants';
+import { SPECIFIC_ROLES, INTERESTS } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
@@ -70,7 +70,7 @@ export function ProfileForm() {
     yearsExperienceInput.trim() !== '' &&
     form.interests.length > 0;
 
-  const secondaryRoleOptions = SECONDARY_ROLES.filter(
+  const secondaryRoleOptions = SPECIFIC_ROLES.filter(
     (r) => r !== form.primary_role,
   );
 
@@ -189,10 +189,10 @@ export function ProfileForm() {
       <Card className="space-y-4 border-brand-green/20 bg-brand-dark-green/45 p-5">
         <div>
           <p className="text-xs uppercase tracking-[0.16em] text-brand-emerald/80">
-            O que você faz melhor
+            Eu posso ajudar com
           </p>
           <p className="mt-2 text-sm text-brand-off-white/62">
-            Sua função principal guia a formação do time. As outras ajudam a dar flexibilidade.
+            Sua contribuição principal guia a formação do time. As outras ajudam a dar flexibilidade.
           </p>
         </div>
 
@@ -216,25 +216,23 @@ export function ProfileForm() {
           </Select>
         </div>
 
-        {form.primary_role && (
-          <div>
-            <label className="mb-2 block text-sm font-medium">
-              Outras funções <span className="text-brand-off-white/50">(opcional)</span>
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {secondaryRoleOptions.map((role) => (
-                <Tag
-                  key={role}
-                  onClick={() => toggleArrayItem('secondary_roles', role)}
-                  selected={form.secondary_roles.includes(role)}
-                  tone="emerald"
-                >
-                  {role}
-                </Tag>
-              ))}
-            </div>
+        <div>
+          <label className="mb-2 block text-sm font-medium">
+            Também posso ajudar com <span className="text-brand-off-white/50">(opcional)</span>
+          </label>
+          <div className="flex flex-wrap gap-2">
+            {secondaryRoleOptions.map((role) => (
+              <Tag
+                key={role}
+                onClick={() => toggleArrayItem('secondary_roles', role)}
+                selected={form.secondary_roles.includes(role)}
+                tone="emerald"
+              >
+                {role}
+              </Tag>
+            ))}
           </div>
-        )}
+        </div>
 
         <div>
           <label className="mb-1 block text-sm font-medium">Anos de experiência</label>

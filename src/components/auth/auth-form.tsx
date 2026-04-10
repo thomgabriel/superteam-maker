@@ -1,6 +1,7 @@
 'use client';
 
 import { Suspense, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { trackEvent } from '@/lib/analytics';
 import { UtmCapture } from '@/components/ui/utm-capture';
@@ -15,6 +16,10 @@ export function AuthForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const supabase = createClient();
+  const searchParams = useSearchParams();
+
+  const authFailed = searchParams.get('error') === 'auth_failed';
+  const displayError = error ?? (authFailed ? 'Não foi possível completar o login. Tente novamente.' : null);
 
   function trackSignupStarted(method: 'google' | 'otp') {
     void trackEvent({
@@ -94,9 +99,9 @@ export function AuthForm() {
           </h2>
         </div>
 
-        {error && (
+        {displayError && (
           <p className="mt-7 rounded-lg bg-red-900/30 px-4 py-2 text-sm text-red-300">
-            {error}
+            {displayError}
           </p>
         )}
 

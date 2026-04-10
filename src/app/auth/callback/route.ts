@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 import { persistAttributionForUser } from '@/lib/attribution';
 import { trackEvent } from '@/lib/analytics.server';
 import { resolveUserStateForUserId } from '@/lib/user-state';
+import { logError } from '@/lib/monitoring';
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
@@ -29,8 +30,8 @@ export async function GET(request: Request) {
       },
     );
 
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
-    if (!error) {
+    const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+    if (!exchangeError) {
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -49,6 +50,8 @@ export async function GET(request: Request) {
 
       return NextResponse.redirect(`${origin}${next ?? '/profile'}`);
     }
+
+    logError('auth_callback.exchange_failed', exchangeError);
   }
 
   return NextResponse.redirect(`${origin}/auth?error=auth_failed`);

@@ -8,7 +8,7 @@ function makeUser(id: string): EnrichedPoolUser {
     user_id: id,
     profile_id: `profile-${id}`,
     name: `User ${id}`,
-    primary_role: 'Frontend Developer',
+    primary_role: 'Desenvolvimento de Software',
     macro_role: 'engineering',
     seniority: 'mid',
     interests: ['DeFi'],

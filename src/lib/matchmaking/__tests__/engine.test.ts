@@ -11,7 +11,7 @@ function makePoolUser(overrides: Partial<EnrichedPoolUser> = {}): EnrichedPoolUs
     user_id: `u-${counter}`,
     profile_id: `p-${counter}`,
     name: `User ${counter}`,
-    primary_role: 'Frontend Developer',
+    primary_role: 'Desenvolvimento de Software',
     macro_role: 'engineering',
     seniority: 'mid',
     interests: ['DeFi'],

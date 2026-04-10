@@ -1,34 +1,15 @@
 export const SPECIFIC_ROLES = [
-  'Desenvolvedor(a) de Software',
-  'Cientista de Dados / IA',
-  'Analista de Sistemas',
-  'Designer de Produto',
-  'Designer Visual / Brand',
-  'Administrador(a)',
-  'Advogado(a) / Direito',
-  'Médico(a) / Saúde',
-  'Economista / Finanças',
-  'Marketing / Comunicação',
-  'Product Manager',
-  'Engenheiro(a)',
-  'Arquiteto(a) / Urbanismo',
-  'Professor(a) / Educação',
-  'Outro',
+  'Desenvolvimento de Software',
+  'Dados / IA',
+  'Design / UX',
+  'Pesquisa / Validação',
+  'Produto / Estratégia',
+  'Pitch / Apresentação',
+  'Marketing / Growth',
+  'Negócios / Operações',
 ] as const;
 
 export type SpecificRole = typeof SPECIFIC_ROLES[number];
-
-export const SECONDARY_ROLES = [
-  'Desenvolvedor(a) de Software',
-  'Cientista de Dados / IA',
-  'Designer de Produto',
-  'Designer Visual / Brand',
-  'Product Manager',
-  'Marketing / Growth',
-  'Biz Dev',
-  'Comunidade / Conteúdo',
-  'Operações / Finanças',
-] as const;
 
 export const INTERESTS = [
   'DePIN',
@@ -55,5 +36,5 @@ export const SENIORITY_LABELS: Record<string, string> = {
 export const MACRO_ROLE_LABELS: Record<string, string> = {
   engineering: 'Engenharia',
   design: 'Design',
-  business_gtm: 'Negócios & Domínio',
+  business_gtm: 'Negócios & Estratégia',
 };
