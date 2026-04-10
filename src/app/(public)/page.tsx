@@ -59,9 +59,15 @@ export default function LandingPage() {
         <UtmCapture />
       </Suspense>
 
-      <section className="relative isolate overflow-hidden px-4 pb-20 pt-6 sm:px-6 lg:px-8">
+      <section className="relative isolate overflow-hidden px-4 pb-44 pt-6 sm:px-6 sm:pb-56 lg:px-8 lg:pb-72">
         <div className="pointer-events-none absolute inset-0">
-          <div className="absolute inset-x-0 top-0 h-[38rem] bg-[radial-gradient(circle_at_top,rgba(255,210,63,0.16),transparent_45%),radial-gradient(circle_at_18%_30%,rgba(0,139,76,0.22),transparent_30%),linear-gradient(180deg,#1b231d_0%,#162018_52%,#1b231d_100%)]" />
+          <div className="absolute inset-x-0 top-0 h-[52rem] bg-[radial-gradient(circle_at_50%_4%,rgba(255,210,63,0.22),transparent_30%),radial-gradient(circle_at_20%_30%,rgba(0,139,76,0.3),transparent_26%),radial-gradient(circle_at_80%_20%,rgba(48,108,64,0.18),transparent_20%),linear-gradient(180deg,#1b231d_0%,#142019_38%,#0d1511_68%,#070b09_100%)] lg:h-[62rem]" />
+          <div className="absolute left-[31%] top-36 h-[24rem] w-[28rem] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(245,232,202,0.16)_0%,rgba(245,232,202,0.05)_40%,rgba(245,232,202,0)_72%)] blur-[90px] lg:top-38 lg:h-[32rem] lg:w-[36rem]" />
+          <div className="absolute left-[37%] top-24 h-72 w-[32rem] -translate-x-1/2 rounded-full bg-brand-yellow/14 blur-[110px] sm:h-80 sm:w-[38rem] lg:top-18 lg:h-[26rem] lg:w-[46rem]" />
+          <div className="absolute left-[24%] top-44 h-56 w-[26rem] -translate-x-1/2 rounded-full bg-brand-emerald/12 blur-[120px] sm:w-[30rem] lg:top-48 lg:h-72 lg:w-[38rem]" />
+          <div className="absolute inset-x-[10%] bottom-20 h-48 rounded-full bg-brand-emerald/14 blur-[120px] lg:bottom-16 lg:h-64" />
+          <div className="absolute inset-x-0 bottom-0 h-72 bg-[linear-gradient(180deg,rgba(27,35,29,0)_0%,rgba(10,15,12,0.34)_18%,rgba(6,9,8,0.78)_66%,rgba(7,11,9,0.94)_100%)] sm:h-80 lg:h-[28rem]" />
+          <div className="absolute inset-x-[18%] bottom-[-3.5rem] h-44 rounded-full bg-[radial-gradient(circle,rgba(0,139,76,0.26)_0%,rgba(0,139,76,0.08)_38%,rgba(0,139,76,0)_72%)] blur-3xl lg:bottom-[-5rem] lg:h-56" />
           <Image
             src="/brand/elements/morth-05.svg"
             alt=""
@@ -110,13 +116,14 @@ export default function LandingPage() {
             </div>
           </div>
 
-          <div className="mt-14 grid items-center gap-12 lg:grid-cols-[1.1fr_0.9fr]">
-            <div className="max-w-2xl">
+          <div className="mt-16 grid min-h-[36rem] items-center gap-12 sm:min-h-[40rem] lg:mt-[5.5rem] lg:min-h-[50rem] lg:grid-cols-[1.1fr_0.9fr]">
+            <div className="relative max-w-2xl">
+              <div className="pointer-events-none absolute -left-10 top-8 h-56 w-56 rounded-full bg-brand-yellow/8 blur-[100px] lg:-left-20 lg:top-4 lg:h-72 lg:w-72" />
               <p className="inline-flex rounded-full border border-brand-yellow/30 bg-brand-yellow/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-brand-yellow">
                 Formação de times para hackathon
               </p>
 
-              <h1 className="mt-6 font-heading text-5xl font-bold leading-[0.95] tracking-tight sm:text-6xl lg:text-7xl">
+              <h1 className="mt-6 max-w-[13ch] font-heading text-5xl font-bold leading-[0.92] tracking-tight sm:text-6xl lg:max-w-[12ch] lg:text-[5.5rem]">
                 Monte um time
                 <span className="block text-brand-yellow">
                   forte de verdade
@@ -146,44 +153,53 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="px-4 pb-6 pt-8 sm:px-6 sm:pt-10 lg:px-8">
+      <section className="relative z-30 -mt-44 px-4 pb-12 pt-0 sm:-mt-48 sm:px-6 lg:-mt-64 lg:px-8">
+        <div className="pointer-events-none absolute inset-x-0 top-[-8rem] h-80 bg-[radial-gradient(circle_at_50%_18%,rgba(0,139,76,0.18),rgba(0,139,76,0.07)_32%,rgba(0,139,76,0)_66%),linear-gradient(180deg,rgba(7,11,9,0)_0%,rgba(7,11,9,0.78)_36%,rgba(7,11,9,0.98)_58%,rgba(7,11,9,0)_100%)] blur-3xl lg:top-[-12rem] lg:h-[28rem]" />
         <div className="mx-auto max-w-6xl">
-          <Card className="grid gap-8 rounded-[2rem] border-brand-green/28 bg-[linear-gradient(135deg,rgba(0,139,76,0.12),rgba(27,35,29,0.96))] p-6 sm:p-8 lg:grid-cols-[0.9fr_1.1fr]">
-            <div className="max-w-xl">
-              <p className="text-sm uppercase tracking-[0.2em] text-brand-emerald/82">
-                Ideias para começar
-              </p>
-              <h2 className="mt-3 font-heading text-3xl font-bold sm:text-4xl">
-                Um bom time começa melhor quando já tem uma ideia para discutir.
-              </h2>
-              <p className="mt-4 text-base leading-8 text-brand-off-white/70">
-                A aba de ideias entra como apoio leve: referências para inspirar
-                a primeira conversa, alinhar interesse e sair do branco sem
-                virar uma lista confusa.
-              </p>
-              <div className="mt-6">
-                <Link href="/ideas" className="inline-flex">
-                  <Button variant="accent" size="lg">
-                    Ver ideias
-                  </Button>
-                </Link>
-              </div>
+          <Card className="relative overflow-hidden rounded-[3.25rem] border-brand-green/45 bg-[linear-gradient(145deg,rgba(12,18,14,0.92)_0%,rgba(18,43,29,0.97)_38%,rgba(9,13,11,1)_100%)] p-6 shadow-[0_52px_170px_rgba(0,0,0,0.56)] sm:p-8 lg:p-12">
+            <div className="pointer-events-none absolute inset-0">
+              <div className="absolute left-[8%] top-0 h-32 w-60 rounded-full bg-brand-emerald/18 blur-3xl lg:h-44 lg:w-96" />
+              <div className="absolute right-[10%] top-10 h-28 w-44 rounded-full bg-brand-yellow/8 blur-3xl lg:h-36 lg:w-56" />
+              <div className="absolute inset-x-0 top-0 h-24 bg-[linear-gradient(180deg,rgba(255,255,255,0.07),rgba(255,255,255,0))]" />
             </div>
 
-            <div className="grid gap-3">
-              {IDEA_SIGNALS.map((signal, index) => (
-                <div
-                  key={signal}
-                  className="rounded-2xl border border-brand-green/24 bg-brand-dark-green/72 px-5 py-5"
-                >
-                  <p className="text-xs uppercase tracking-[0.18em] text-brand-off-white/40">
-                    Ideia {index + 1}
-                  </p>
-                  <p className="mt-2 text-sm leading-7 text-brand-off-white">
-                    {signal}
-                  </p>
+            <div className="relative grid gap-8 lg:grid-cols-[0.9fr_1.1fr]">
+              <div className="max-w-xl">
+                <p className="text-sm uppercase tracking-[0.24em] text-brand-emerald/82">
+                  Ideias para começar
+                </p>
+                <h2 className="mt-4 font-heading text-3xl font-bold leading-tight sm:text-4xl lg:text-[3.25rem]">
+                  Um bom time começa melhor quando já tem uma ideia para discutir.
+                </h2>
+                <p className="mt-5 text-base leading-8 text-brand-off-white/70">
+                  A aba de ideias entra como apoio leve: referências para inspirar
+                  a primeira conversa, alinhar interesse e sair do branco sem
+                  virar uma lista confusa.
+                </p>
+                <div className="mt-7">
+                  <Link href="/ideas" className="inline-flex">
+                    <Button variant="accent" size="lg">
+                      Ver ideias
+                    </Button>
+                  </Link>
                 </div>
-              ))}
+              </div>
+
+              <div className="grid gap-3">
+                {IDEA_SIGNALS.map((signal, index) => (
+                  <div
+                    key={signal}
+                    className="rounded-[1.7rem] border border-brand-green/34 bg-[linear-gradient(180deg,rgba(26,36,29,0.84),rgba(10,15,12,0.98))] px-5 py-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.035),0_20px_48px_rgba(0,0,0,0.22)]"
+                  >
+                    <p className="text-xs uppercase tracking-[0.18em] text-brand-off-white/40">
+                      Ideia {index + 1}
+                    </p>
+                    <p className="mt-2 text-sm leading-7 text-brand-off-white">
+                      {signal}
+                    </p>
+                  </div>
+                ))}
+              </div>
             </div>
           </Card>
         </div>
