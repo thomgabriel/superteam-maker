@@ -29,6 +29,7 @@ export function AppHeader({ admin, teamId, statusPath }: AppHeaderProps) {
   const queueActive = pathname.startsWith('/queue');
   const profileActive = pathname.startsWith('/profile');
   const ideasActive = pathname.startsWith('/ideas');
+  const supportActive = pathname.startsWith('/support');
   const adminActive = pathname.startsWith('/admin');
 
   return (
@@ -59,6 +60,9 @@ export function AppHeader({ admin, teamId, statusPath }: AppHeaderProps) {
           ) : null}
           <Link href="/ideas" className={getLinkClassName(ideasActive)}>
             Ideias
+          </Link>
+          <Link href="/support" className={getLinkClassName(supportActive)}>
+            Suporte
           </Link>
           {admin && (
             <Link href="/admin" className={getLinkClassName(adminActive, 'admin')}>

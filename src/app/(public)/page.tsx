@@ -96,10 +96,10 @@ export default function LandingPage() {
             />
             <div className="hidden items-center gap-3 sm:flex">
               <Link
-                href="/ideas"
+                href="/support"
                 className="rounded-full border border-brand-green/25 bg-brand-dark-green/55 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-brand-off-white/72 transition-colors hover:border-brand-green hover:text-brand-off-white"
               >
-                Ideias
+                Suporte
               </Link>
               <Link
                 href="/auth"
