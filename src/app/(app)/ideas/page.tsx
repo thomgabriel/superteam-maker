@@ -44,12 +44,14 @@ export default async function IdeasPage() {
         <section className="pb-10 pt-4">
           <div className="max-w-3xl">
             <p className="inline-flex rounded-full border border-brand-yellow/30 bg-brand-yellow/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-brand-yellow">
-              Inspiração para o time
+              Ideias curadas para hackathon
             </p>
 
             <h1 className="mt-6 font-heading text-4xl font-bold leading-[0.96] tracking-tight sm:text-5xl lg:text-6xl">
-              Ideias para o time
-              <span className="block text-brand-emerald">começar rápido</span>
+              Escolha uma ideia que o time
+              <span className="block text-brand-emerald">
+                consiga polir de verdade
+              </span>
             </h1>
           </div>
         </section>

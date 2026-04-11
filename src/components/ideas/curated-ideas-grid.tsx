@@ -1,79 +1,84 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { Tag } from "@/components/ui/tag";
+import { useMemo, useState } from "react";
+import {
+  filterCuratedIdeas,
+  sortCuratedIdeas,
+  type CuratedIdea,
+  type CuratedIdeaBuildScore,
+  type CuratedIdeaCategory,
+  type CuratedIdeaEditorialTrack,
+  type CuratedIdeaSort,
+} from "@/lib/curated-ideas";
 import { CuratedIdeaCard } from "./curated-idea-card";
 import { CuratedIdeaModal } from "./curated-idea-modal";
-import type { CuratedIdea } from "@/lib/curated-ideas";
+import { CuratedIdeasToolbar } from "./curated-ideas-toolbar";
 
 export function CuratedIdeasGrid({ ideas }: { ideas: CuratedIdea[] }) {
   const [query, setQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] =
+    useState<CuratedIdeaCategory | null>(null);
+  const [selectedTrack, setSelectedTrack] =
+    useState<CuratedIdeaEditorialTrack | null>(null);
+  const [selectedBuildScore, setSelectedBuildScore] =
+    useState<CuratedIdeaBuildScore | null>(null);
+  const [featuredOnly, setFeaturedOnly] = useState(false);
+  const [sort, setSort] = useState<CuratedIdeaSort>("featured");
   const [selectedIdea, setSelectedIdea] = useState<CuratedIdea | null>(null);
 
   const categories = useMemo(
-    () => [...new Set(ideas.map((i) => i.category))],
+    () => [...new Set(ideas.map((idea) => idea.category))] as CuratedIdeaCategory[],
     [ideas]
   );
 
-  const filtered = useMemo(() => {
-    let result = ideas;
-    if (selectedCategory) {
-      result = result.filter((i) => i.category === selectedCategory);
-    }
-    if (query.trim()) {
-      const q = query.trim().toLowerCase();
-      result = result.filter(
-        (i) =>
-          i.title.toLowerCase().includes(q) ||
-          i.description.toLowerCase().includes(q) ||
-          i.details.toLowerCase().includes(q) ||
-          i.tags.some((t) => t.toLowerCase().includes(q))
-      );
-    }
-    return result;
-  }, [ideas, query, selectedCategory]);
+  const visibleIdeas = useMemo(() => {
+    const filtered = filterCuratedIdeas(ideas, {
+      query,
+      category: selectedCategory,
+      editorialTrack: selectedTrack,
+      buildScore: selectedBuildScore,
+      featuredOnly,
+    });
 
-  function toggleCategory(cat: string) {
-    setSelectedCategory(selectedCategory === cat ? null : cat);
-  }
+    return sortCuratedIdeas(filtered, sort);
+  }, [
+    ideas,
+    query,
+    selectedCategory,
+    selectedTrack,
+    selectedBuildScore,
+    featuredOnly,
+    sort,
+  ]);
 
   return (
     <div>
-      <p className="mb-6 max-w-2xl text-sm leading-7 text-brand-off-white/62">
-        Ideias prontas para inspirar o time. Adapte, simplifique ou misture
-        como quiser.
+      <p className="mb-6 max-w-3xl text-sm leading-7 text-brand-off-white/62">
+        Estas 200 ideias já passaram por um filtro editorial para times que
+        querem dor real, MVP possível e um ângulo cripto que os jurados
+        entendam rápido. Use os filtros para achar apostas mais fáceis de
+        construir, melhores para creators ou mais fortes na demo.
       </p>
 
-      {/* Search */}
-      <div className="mb-4">
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Buscar ideias..."
-          className="w-full rounded-xl border border-brand-green/30 bg-brand-dark-green/70 px-5 py-3.5 text-sm text-brand-off-white placeholder:text-brand-off-white/32 focus:border-brand-emerald focus:outline-none"
-        />
-      </div>
+      <CuratedIdeasToolbar
+        categories={categories}
+        selectedCategory={selectedCategory}
+        selectedTrack={selectedTrack}
+        selectedBuildScore={selectedBuildScore}
+        featuredOnly={featuredOnly}
+        sort={sort}
+        query={query}
+        onCategoryChange={setSelectedCategory}
+        onTrackChange={setSelectedTrack}
+        onBuildScoreChange={setSelectedBuildScore}
+        onFeaturedOnlyChange={setFeaturedOnly}
+        onSortChange={setSort}
+        onQueryChange={setQuery}
+      />
 
-      {/* Category chips */}
-      <div className="mb-6 flex flex-wrap gap-2">
-        {categories.map((cat) => (
-          <Tag
-            key={cat}
-            selected={selectedCategory === cat}
-            tone={selectedCategory === cat ? "emerald" : "neutral"}
-            onClick={() => toggleCategory(cat)}
-          >
-            {cat}
-          </Tag>
-        ))}
-      </div>
-
-      {/* Grid */}
-      {filtered.length > 0 ? (
+      {visibleIdeas.length > 0 ? (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {filtered.map((idea) => (
+          {visibleIdeas.map((idea) => (
             <CuratedIdeaCard
               key={idea.id}
               idea={idea}
@@ -84,7 +89,7 @@ export function CuratedIdeasGrid({ ideas }: { ideas: CuratedIdea[] }) {
       ) : (
         <div className="rounded-2xl border border-brand-green/20 bg-brand-green/8 px-8 py-12 text-center">
           <p className="text-sm text-brand-off-white/52">
-            Nenhuma ideia encontrada.
+            Nenhuma ideia encontrada com esses filtros.
           </p>
         </div>
       )}

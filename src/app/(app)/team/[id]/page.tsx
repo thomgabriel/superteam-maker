@@ -3,6 +3,7 @@ import { createServiceRoleClient } from '@/lib/supabase/server';
 import { MemberCard } from '@/components/team/member-card';
 import { ClaimLeaderButton } from '@/components/team/claim-leader-button';
 import { LeaderPanel } from '@/components/team/leader-panel';
+import { RequestMemberButton } from '@/components/team/request-member-button';
 import Image from 'next/image';
 import type { Team } from '@/types/database';
 import { resolveAuthenticatedUserState } from '@/lib/user-state';
@@ -207,6 +208,7 @@ export default async function TeamPage({
           <div className="space-y-4">
             {!hasLeader && <ClaimLeaderButton teamId={teamId} />}
             {isLeader && <LeaderPanel team={resolvedState.team as Team} />}
+            {isLeader && members.length === 3 && <RequestMemberButton teamId={teamId} />}
 
             {!isLeader && resolvedState.team.idea_title && (
               <Card className="rounded-[1.75rem] border-brand-green/24 bg-brand-dark-green/72 p-5">

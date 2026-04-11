@@ -20,3 +20,5 @@ export const MATCHMAKING_CONFIG = {
 export type ScoringWeights = typeof MATCHMAKING_CONFIG.weights;
 
 export const FLEX_DISCOUNT = 0.7;
+
+export const MIN_EXTRA_MEMBER_SCORE = 25;

@@ -29,6 +29,15 @@ export function CuratedIdeaModal({ idea, onClose }: CuratedIdeaModalProps) {
     if (event.target === event.currentTarget) onClose();
   }
 
+  const sections = [
+    { label: "Problema real", value: idea.painPoint },
+    { label: "Usuário-alvo", value: idea.targetUser },
+    { label: "Escopo do MVP", value: idea.mvpScope },
+    { label: "Ângulo cripto", value: idea.cryptoAngle },
+    { label: "Gancho para jurados", value: idea.judgeHook },
+    { label: "Notas editoriais", value: idea.confidenceNote },
+  ];
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-end justify-center bg-brand-dark-green/82 px-0 pb-0 pt-10 backdrop-blur-sm sm:items-center sm:px-4 sm:py-6"
@@ -68,13 +77,20 @@ export function CuratedIdeaModal({ idea, onClose }: CuratedIdeaModalProps) {
           {idea.description}
         </p>
 
-        <div className="mt-6 rounded-[1.25rem] border border-brand-green/22 bg-brand-green/8 px-5 py-5">
-          <p className="text-xs uppercase tracking-[0.16em] text-brand-off-white/42">
-            Mais contexto
-          </p>
-          <p className="mt-3 text-sm leading-8 text-brand-off-white/76">
-            {idea.details}
-          </p>
+        <div className="mt-6 grid gap-4">
+          {sections.map((section) => (
+            <div
+              key={section.label}
+              className="rounded-[1.25rem] border border-brand-green/22 bg-brand-green/8 px-5 py-5"
+            >
+              <p className="text-xs uppercase tracking-[0.16em] text-brand-off-white/42">
+                {section.label}
+              </p>
+              <p className="mt-3 text-sm leading-8 text-brand-off-white/76">
+                {section.value}
+              </p>
+            </div>
+          ))}
         </div>
 
         <div className="mt-6 flex flex-wrap gap-2">
