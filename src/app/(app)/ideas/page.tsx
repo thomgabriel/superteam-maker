@@ -48,8 +48,8 @@ export default async function IdeasPage() {
             </p>
 
             <h1 className="mt-6 font-heading text-4xl font-bold leading-[0.96] tracking-tight sm:text-5xl lg:text-6xl">
-              Ideias para tirar o time
-              <span className="block text-brand-emerald">do branco rápido</span>
+              Ideias para o time
+              <span className="block text-brand-emerald">começar rápido</span>
             </h1>
           </div>
         </section>
@@ -68,8 +68,7 @@ export default async function IdeasPage() {
                   </p>
                   <p className="mt-3 max-w-2xl text-base leading-8 text-brand-off-white/70">
                     Busque projetos reais submetidos em hackathons Colosseum para
-                    encontrar referências, padrões e possíveis caminhos para o seu
-                    time.
+                    encontrar referências, padrões e inspiração para o seu time.
                   </p>
                   <div className="mt-4 flex gap-4">
                     <a

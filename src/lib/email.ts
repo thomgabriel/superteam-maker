@@ -33,7 +33,7 @@ export async function sendMatchNotification(
           <div style="max-width:560px; margin:0 auto; border:1px solid rgba(0,139,76,0.24); border-radius:28px; overflow:hidden; background:linear-gradient(180deg,#1b231d 0%,#162018 100%);">
             <div style="padding:32px 32px 20px; background:radial-gradient(circle at top, rgba(255,210,63,0.14), transparent 42%), radial-gradient(circle at 20% 20%, rgba(0,139,76,0.18), transparent 28%), linear-gradient(180deg, #1b231d 0%, #162018 100%);">
               <div style="display:inline-block; padding:8px 14px; border-radius:999px; border:1px solid rgba(255,210,63,0.28); background:rgba(255,210,63,0.08); color:#ffd23f; font-size:11px; font-weight:700; letter-spacing:0.22em; text-transform:uppercase;">
-                Match confirmado
+                Time formado
               </div>
 
               <h1 style="margin:20px 0 0; font-family:Archivo, Inter, Arial, sans-serif; font-size:46px; line-height:0.98; letter-spacing:-0.04em; color:#f5e8ca;">
@@ -42,7 +42,7 @@ export async function sendMatchNotification(
               </h1>
 
               <p style="margin:20px 0 0; max-width:420px; font-size:17px; line-height:1.7; color:rgba(245,232,202,0.72);">
-                Seu time já está pronto para começar a conversa. Agora é abrir a plataforma, ver quem está com você e partir para a execução.
+                Seu time já está pronto. Entre na plataforma, conheça o grupo e comecem a construir juntos.
               </p>
             </div>
 

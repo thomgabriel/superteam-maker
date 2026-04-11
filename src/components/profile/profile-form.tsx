@@ -82,7 +82,7 @@ export function ProfileForm() {
             Seu perfil
           </p>
           <h2 className="mt-2 font-heading text-2xl font-bold">
-            Conte o básico para formar seu time
+            Suas informações para o hackathon
           </h2>
         </div>
         <div className="hidden rounded-2xl border border-brand-green/25 bg-brand-dark-green/60 px-4 py-3 text-right sm:block">
@@ -90,8 +90,8 @@ export function ProfileForm() {
             Resultado
           </p>
           <p className="mt-1 text-sm text-brand-off-white/68">
-            Perfil salvo
-            <span className="block">+ entrada na fila</span>
+            Depois disso:
+            <span className="block">você entra na fila</span>
           </p>
         </div>
       </div>
@@ -108,7 +108,7 @@ export function ProfileForm() {
             Identidade
           </p>
           <p className="mt-2 text-sm text-brand-off-white/62">
-            O básico para o time saber quem você é e como falar com você.
+            Para o time saber quem você é e como falar com você.
           </p>
         </div>
 
@@ -143,7 +143,7 @@ export function ProfileForm() {
             Sociais
           </p>
           <p className="mt-2 text-sm text-brand-off-white/62">
-            Opcional, mas ajuda seu time a entender seu repertório e te encontrar rápido.
+            Opcional, mas ajuda seu time a te conhecer melhor.
           </p>
         </div>
 
@@ -192,7 +192,7 @@ export function ProfileForm() {
             Eu posso ajudar com
           </p>
           <p className="mt-2 text-sm text-brand-off-white/62">
-            Sua contribuição principal guia a formação do time. As outras ajudam a dar flexibilidade.
+            Escolha sua principal e marque outras que você também domina.
           </p>
         </div>
 
@@ -254,10 +254,10 @@ export function ProfileForm() {
       <Card className="space-y-4 border-brand-green/20 bg-brand-dark-green/45 p-5">
         <div>
           <p className="text-xs uppercase tracking-[0.16em] text-brand-emerald/80">
-            Onde você quer construir
+            Áreas de interesse
           </p>
           <p className="mt-2 text-sm text-brand-off-white/62">
-            Esses temas ajudam a aproximar pessoas com repertório e ambição parecidos.
+            Ajuda a formar times com interesses parecidos.
           </p>
         </div>
 
@@ -288,7 +288,7 @@ export function ProfileForm() {
         fullWidth
         className="shadow-[0_16px_40px_rgba(0,139,76,0.18)]"
       >
-        {loading ? 'Criando perfil...' : 'Encontrar meu time'}
+        {loading ? 'Criando perfil...' : 'Entrar na fila'}
       </Button>
     </form>
   );

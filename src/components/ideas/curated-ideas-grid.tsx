@@ -41,8 +41,8 @@ export function CuratedIdeasGrid({ ideas }: { ideas: CuratedIdea[] }) {
   return (
     <div>
       <p className="mb-6 max-w-2xl text-sm leading-7 text-brand-off-white/62">
-        Pontos de partida para o time ganhar tração logo no começo. Adapte,
-        simplifique ou misture ideias sem precisar começar do zero.
+        Ideias prontas para inspirar o time. Adapte, simplifique ou misture
+        como quiser.
       </p>
 
       {/* Search */}

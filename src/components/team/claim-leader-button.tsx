@@ -21,14 +21,14 @@ export function ClaimLeaderButton({ teamId }: { teamId: string }) {
   return (
     <Card className="rounded-[1.75rem] border-brand-yellow/24 bg-[linear-gradient(135deg,rgba(255,210,63,0.10),rgba(27,35,29,0.96))] p-5">
       <p className="text-xs uppercase tracking-[0.18em] text-brand-yellow/80">
-        Liderança em aberto
+        Quem lidera?
       </p>
       <h3 className="mt-3 font-heading text-2xl font-semibold text-brand-off-white">
-        Alguém do time precisa puxar o começo.
+        O time precisa de alguém para organizar o começo.
       </h3>
       <p className="mt-3 text-sm leading-7 text-brand-off-white/68">
-        Quem assumir consegue organizar o grupo, definir a ideia inicial e
-        atualizar o perfil do projeto para o resto do time.
+        Quem assumir organiza o grupo, define a ideia e atualiza as
+        informações do projeto.
       </p>
 
       <div className="mt-5 space-y-3">

@@ -74,11 +74,8 @@ export function AuthForm() {
             alt="Superteam Brasil"
             className="h-40 w-40 object-contain"
           />
-          <p className="mt-6 text-sm uppercase tracking-[0.18em] text-brand-emerald/80">
-            Comece aqui
-          </p>
-          <h2 className="mt-4 font-heading text-3xl font-semibold sm:text-[2.15rem]">
-            Entre no hackathon
+          <h2 className="mt-6 font-heading text-3xl font-semibold sm:text-[2.15rem]">
+            Acesse sua conta
           </h2>
         </div>
 

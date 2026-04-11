@@ -67,7 +67,7 @@ export default async function TeamRevealPage() {
         <div className="grid w-full gap-8 lg:grid-cols-[0.92fr_1.08fr] lg:items-center">
           <div className="max-w-2xl">
             <p className="inline-flex rounded-full border border-brand-yellow/30 bg-brand-yellow/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-brand-yellow">
-              Match confirmado
+              Time formado
             </p>
             <Image src="/brand/logo/symbol-yellow.svg" alt="" width={56} height={56} className="mt-6" />
             <h1 className="mt-5 font-heading text-4xl font-bold leading-[0.96] tracking-tight text-brand-off-white sm:text-5xl lg:text-6xl">
@@ -75,8 +75,8 @@ export default async function TeamRevealPage() {
               <span className="block text-brand-yellow">time forte.</span>
             </h1>
             <p className="mt-5 max-w-xl text-base leading-8 text-brand-off-white/72 sm:text-lg">
-              O grupo já está pronto para se organizar. Agora é abrir a
-              conversa, alinhar a direção e começar a construir.
+              O grupo já está pronto. Agora é abrir a conversa e começar
+              a construir juntos.
             </p>
 
             <Card className="mt-8 rounded-[1.75rem] border-brand-yellow/24 bg-brand-yellow/10 px-6 py-5">
@@ -90,8 +90,8 @@ export default async function TeamRevealPage() {
 
             {!resolvedState.team.leader_id && (
               <p className="mt-5 text-sm leading-7 text-brand-off-white/60">
-                Ainda não existe líder definido. Qualquer membro pode assumir
-                esse papel assim que entrar na tela do time.
+                Ainda não existe líder. Qualquer membro pode assumir na
+                página do time.
               </p>
             )}
 
@@ -108,7 +108,7 @@ export default async function TeamRevealPage() {
             <div className="flex items-center justify-between gap-4">
               <div>
                 <p className="text-xs uppercase tracking-[0.18em] text-brand-off-white/42">
-                  Membros confirmados
+                  Membros
                 </p>
                 <h2 className="mt-2 font-heading text-2xl font-semibold text-brand-off-white">
                   Quem vai construir com você

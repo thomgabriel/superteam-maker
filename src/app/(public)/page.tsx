@@ -8,47 +8,47 @@ import { Card } from "@/components/ui/card";
 
 const BENEFITS = [
   {
-    title: "Times equilibrados",
+    title: "Time diverso",
     description:
-      "Formação por função, experiência e interesse para reduzir combinações aleatórias.",
+      "Cada time mistura quem programa, quem pesquisa, quem apresenta e quem organiza.",
   },
   {
-    title: "Onboarding rápido",
+    title: "Perfil em 1 minuto",
     description:
-      "Perfil em menos de um minuto, sem chat interno e sem fricção desnecessária.",
+      "Diz o que você faz, entra na fila e pronto. Sem formulário longo.",
   },
   {
-    title: "Pronto para construir",
+    title: "Direto pro WhatsApp",
     description:
-      "Assim que o time fica pronto, vocês já entram em modo execução via WhatsApp.",
+      "Quando o time sai, vocês já se conectam e começam a construir.",
   },
 ];
 
 const STEPS = [
   {
     step: "01",
-    title: "Preencha seu perfil",
+    title: "Crie seu perfil",
     description:
-      "Conte sua função principal, experiência e áreas de interesse.",
+      "Diz como pode ajudar e o que te interessa. Leva menos de 1 minuto.",
   },
   {
     step: "02",
     title: "Entre na fila",
     description:
-      "A plataforma agrupa pessoas compatíveis em times de 3 a 4 membros.",
+      "A plataforma monta times de 3 a 4 pessoas com perfis complementares.",
   },
   {
     step: "03",
-    title: "Encontre seu time",
+    title: "Receba seu time",
     description:
-      "Quando o time estiver pronto, você entra e já começa a organizar a ideia.",
+      "Você recebe um email, entra na plataforma e já pode começar.",
   },
 ];
 
 const IDEA_SIGNALS = [
-  "Referências para começar a conversa",
-  "Temas e categorias para o time se alinhar mais rápido",
-  "Inspiração sem virar uma lista confusa",
+  { label: "Ideias curadas", value: "200+ ideias prontas para hackathon" },
+  { label: "Acervo Colosseum", value: "5.400+ projetos reais já submetidos" },
+  { label: "Filtros", value: "Busca por categoria, track e tecnologia" },
 ];
 
 export default function LandingPage() {
@@ -120,7 +120,7 @@ export default function LandingPage() {
             <div className="relative max-w-2xl">
               <div className="pointer-events-none absolute -left-10 top-8 h-56 w-56 rounded-full bg-brand-yellow/8 blur-[100px] lg:-left-20 lg:top-4 lg:h-72 lg:w-72" />
               <p className="inline-flex rounded-full border border-brand-yellow/30 bg-brand-yellow/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-brand-yellow">
-                Formação de times para hackathon
+                Frontier Hackathon — Colosseum
               </p>
 
               <h1 className="mt-6 max-w-[13ch] font-heading text-5xl font-bold leading-[0.92] tracking-tight sm:text-6xl lg:max-w-[12ch] lg:text-[5.5rem]">
@@ -131,14 +131,14 @@ export default function LandingPage() {
               </h1>
 
               <p className="mt-6 max-w-xl text-lg leading-8 text-brand-off-white/74 sm:text-xl">
-                Crie seu perfil, entre na fila e receba um time compatível
-                para começar rápido.
+                Encontre pessoas que complementam você e comece a construir
+                em minutos.
               </p>
 
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <Link href="/profile" className="sm:min-w-52">
                   <Button variant="primary" size="lg" fullWidth>
-                    Quero encontrar meu time
+                    Encontrar meu time
                   </Button>
                 </Link>
                 <a
@@ -166,36 +166,35 @@ export default function LandingPage() {
             <div className="relative grid gap-8 lg:grid-cols-[0.9fr_1.1fr]">
               <div className="max-w-xl">
                 <p className="text-sm uppercase tracking-[0.24em] text-brand-emerald/82">
-                  Ideias para começar
+                  Inspiração para o time
                 </p>
                 <h2 className="mt-4 font-heading text-3xl font-bold leading-tight sm:text-4xl lg:text-[3.25rem]">
-                  Um bom time começa melhor quando já tem uma ideia para discutir.
+                  Não sabe o que construir? A gente te ajuda.
                 </h2>
                 <p className="mt-5 text-base leading-8 text-brand-off-white/70">
-                  A aba de ideias entra como apoio leve: referências para inspirar
-                  a primeira conversa, alinhar interesse e sair do branco sem
-                  virar uma lista confusa.
+                  Explore ideias prontas para hackathon ou busque em milhares de
+                  projetos reais já submetidos no Colosseum.
                 </p>
                 <div className="mt-7">
                   <Link href="/ideas" className="inline-flex">
                     <Button variant="accent" size="lg">
-                      Ver ideias
+                      Explorar ideias
                     </Button>
                   </Link>
                 </div>
               </div>
 
               <div className="grid gap-3">
-                {IDEA_SIGNALS.map((signal, index) => (
+                {IDEA_SIGNALS.map((signal) => (
                   <div
-                    key={signal}
+                    key={signal.label}
                     className="rounded-[1.7rem] border border-brand-green/34 bg-[linear-gradient(180deg,rgba(26,36,29,0.84),rgba(10,15,12,0.98))] px-5 py-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.035),0_20px_48px_rgba(0,0,0,0.22)]"
                   >
-                    <p className="text-xs uppercase tracking-[0.18em] text-brand-off-white/40">
-                      Ideia {index + 1}
+                    <p className="text-xs uppercase tracking-[0.18em] text-brand-emerald/72">
+                      {signal.label}
                     </p>
                     <p className="mt-2 text-sm leading-7 text-brand-off-white">
-                      {signal}
+                      {signal.value}
                     </p>
                   </div>
                 ))}
@@ -209,10 +208,10 @@ export default function LandingPage() {
         <div className="mx-auto max-w-6xl">
           <div className="mb-8 max-w-2xl">
             <p className="text-sm uppercase tracking-[0.2em] text-brand-emerald/80">
-              Por que isso existe
+              Por que usar
             </p>
             <h2 className="mt-3 font-heading text-3xl font-bold sm:text-4xl">
-              Mais chance real de executar.
+              Monta time em minutos, não em dias.
             </h2>
           </div>
 
@@ -222,10 +221,7 @@ export default function LandingPage() {
                 key={benefit.title}
                 className="rounded-2xl bg-[linear-gradient(180deg,rgba(27,35,29,0.96),rgba(27,35,29,0.72))] p-6"
               >
-                <p className="text-sm uppercase tracking-[0.18em] text-brand-emerald/78">
-                  vantagem
-                </p>
-                <h3 className="mt-4 font-heading text-2xl font-semibold">
+                <h3 className="font-heading text-2xl font-semibold">
                   {benefit.title}
                 </h3>
                 <p className="mt-3 text-sm leading-7 text-brand-off-white/66">
@@ -265,11 +261,11 @@ export default function LandingPage() {
                 Como funciona
               </p>
               <h2 className="mt-3 font-heading text-3xl font-bold sm:text-4xl">
-                Três passos. Um objetivo: te colocar para construir.
+                Três passos. Pronto pra construir.
               </h2>
               <p className="mt-5 max-w-md text-base leading-8 text-brand-off-white/68">
-                O fluxo é curto de propósito. Tudo aqui foi desenhado para
-                reduzir fricção entre descoberta, formação do time e execução.
+                Sem processo longo. Você preenche o perfil, entra na fila e
+                recebe seu time.
               </p>
             </div>
 
@@ -310,21 +306,20 @@ export default function LandingPage() {
 
             <div className="relative z-10 max-w-2xl">
               <p className="text-sm uppercase tracking-[0.2em] text-brand-yellow">
-                Pronto para entrar?
+                Bora?
               </p>
               <h2 className="mt-4 font-heading text-4xl font-bold leading-tight sm:text-5xl">
-                Seu próximo time pode estar a poucos minutos de distância.
+                Seu time pode estar a poucos minutos de distância.
               </h2>
               <p className="mt-4 text-base leading-8 text-brand-off-white/72">
-                Crie seu perfil agora, entre na fila e deixe a plataforma cuidar
-                da parte mais chata: encontrar as pessoas certas para construir
-                com você.
+                Crie seu perfil, entre na fila e comece a construir com
+                pessoas que complementam você.
               </p>
 
               <div className="mt-8">
                 <Link href="/profile" className="inline-flex">
                   <Button variant="secondary" size="lg">
-                    Entrar na fila
+                    Criar meu perfil
                   </Button>
                 </Link>
               </div>

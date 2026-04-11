@@ -106,8 +106,8 @@ export default async function TeamPage({
   const hasLeader = !!resolvedState.team.leader_id;
 
   const STATUS_LABELS: Record<string, string> = {
-    forming: 'Formando',
-    pending_activation: 'Organização inicial',
+    forming: 'Preparando',
+    pending_activation: 'Primeiros passos',
     active: 'Ativo',
     inactive: 'Inativo',
   };
@@ -136,8 +136,7 @@ export default async function TeamPage({
               {resolvedState.team.name}
             </h1>
             <p className="mt-4 max-w-xl text-base leading-8 text-brand-off-white/70">
-              Esse é o espaço do time para se organizar, escolher a direção e
-              começar o primeiro passo juntos.
+              Aqui o time se organiza, define a ideia e começa a construir.
             </p>
           </Card>
 
@@ -167,8 +166,8 @@ export default async function TeamPage({
                   A ideia ainda não foi definida.
                 </h2>
                 <p className="mt-3 text-sm leading-7 text-brand-off-white/70">
-                  Usem esse momento para alinhar o problema, o formato do demo e
-                  o recorte inicial que faz mais sentido para o time.
+                  Usem esse momento para alinhar o problema e definir o que
+                  vão construir.
                 </p>
               </>
             )}
@@ -182,7 +181,7 @@ export default async function TeamPage({
                 Time
               </p>
               <h2 className="mt-2 font-heading text-3xl font-semibold text-brand-off-white">
-                Quem está com você nessa rodada
+                Quem está no time
               </h2>
             </div>
 

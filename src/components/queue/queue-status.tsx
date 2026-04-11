@@ -10,10 +10,10 @@ interface QueueStatusProps {
 }
 
 const TIPS = [
-  "A formação considera função principal, senioridade e interesses em comum.",
-  "Os times saem em grupos de 3 a 4 pessoas, buscando combinações mais equilibradas.",
-  "Assim que o seu time ficar pronto, você vai direto para a tela de revelação.",
-  "Enquanto espera, você pode buscar inspiração na aba Ideias.",
+  "Os times são montados com base no que você faz, sua experiência e seus interesses.",
+  "Cada time tem de 3 a 4 pessoas com perfis diferentes.",
+  "Você vai receber um email quando seu time estiver pronto.",
+  "Enquanto espera, explore ideias na aba Ideias do menu.",
 ];
 
 export function QueueStatus({ userId }: QueueStatusProps) {
@@ -121,19 +121,19 @@ export function QueueStatus({ userId }: QueueStatusProps) {
           </div>
           <div>
             <p className="text-xs uppercase tracking-[0.18em] text-brand-emerald/80">
-              Fila em andamento
+              Buscando seu time
             </p>
           </div>
         </div>
 
         <h1 className="mt-8 font-heading text-4xl font-bold leading-[0.96] tracking-tight text-brand-off-white sm:text-5xl lg:text-6xl">
-          Encontrando seu
-          <span className="block text-brand-emerald">time compatível...</span>
+          Montando seu
+          <span className="block text-brand-emerald">time...</span>
         </h1>
 
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
           <p className="flex items-center text-sm leading-7 text-brand-off-white/60">
-            Você receberá um email quando o time estiver pronto.
+            Quando o time estiver pronto, você recebe um aviso aqui.
           </p>
         </div>
 
@@ -142,8 +142,7 @@ export function QueueStatus({ userId }: QueueStatusProps) {
             Enquanto espera
           </p>
           <p className="mt-3 text-sm leading-7 text-brand-off-white/72">
-            Crie sua conta no Colosseum para chegar pronto quando o time estiver
-            fechado.
+            Crie sua conta no Colosseum para já estar pronto quando o time sair.
           </p>
           <div className="mt-4">
             <a
@@ -159,12 +158,12 @@ export function QueueStatus({ userId }: QueueStatusProps) {
 
         <Card className="mt-8 min-h-[5rem] rounded-[1.5rem] border-brand-green/24 bg-brand-dark-green/64 px-6 py-5">
           <p className="text-xs uppercase tracking-[0.18em] text-brand-off-white/42">
-            {connectionMode === "realtime" ? "Agora" : "Atualização de apoio"}
+            {connectionMode === "realtime" ? "Agora" : "Conexão alternativa"}
           </p>
           <p className="mt-3 text-sm leading-7 text-brand-off-white/72 transition-opacity">
             {connectionMode === "realtime"
               ? TIPS[tipIndex]
-              : "Seguimos verificando seu status automaticamente enquanto a conexão em tempo real se recupera."}
+              : "Estamos verificando seu status automaticamente."}
           </p>
         </Card>
       </div>

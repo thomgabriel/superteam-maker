@@ -34,10 +34,10 @@ export function LeaderPanel({ team }: { team: Team }) {
     <Card className="space-y-6 rounded-[1.75rem] border-brand-yellow/24 bg-[linear-gradient(135deg,rgba(255,210,63,0.10),rgba(27,35,29,0.96))] p-6">
       <div>
         <p className="text-xs uppercase tracking-[0.18em] text-brand-yellow/82">
-          Painel do líder
+          Você é o líder
         </p>
         <h3 className="mt-3 font-heading text-2xl font-semibold text-brand-off-white">
-          Organize o começo do time.
+          Defina a ideia e organize o grupo.
         </h3>
       </div>
 
@@ -48,7 +48,7 @@ export function LeaderPanel({ team }: { team: Team }) {
         <ol className="mt-3 list-inside list-decimal space-y-2 text-sm leading-7 text-brand-off-white/72">
           <li>Crie um grupo no WhatsApp.</li>
           <li>Adicione todos os membros.</li>
-          <li>Definam uma ideia e preencham esse bloco juntos.</li>
+          <li>Definam uma ideia e preencham aqui.</li>
         </ol>
       </Card>
 
