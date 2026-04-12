@@ -44,6 +44,14 @@ export default async function TeamPage({
 
   const db = await createServiceRoleClient();
 
+  // Mark member as active (visited team page)
+  await db
+    .from('team_members')
+    .update({ last_active_at: new Date().toISOString() })
+    .eq('team_id', teamId)
+    .eq('user_id', resolvedState.userId)
+    .eq('status', 'active');
+
   // Fetch members and profiles separately — the join via user_id doesn't resolve
   // through Supabase's relation inference (team_members.user_id → users, not profiles)
   const { data: rawMembers } = await db

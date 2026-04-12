@@ -207,14 +207,23 @@ async function performMaintenance(supabase: SupabaseClient): Promise<Maintenance
     notes.push(`deactivated ${deactivatedTeams.length} unclaimed teams`);
   }
 
+  // Only replace members who never visited the team page (last_active_at was never
+  // updated beyond its default value set at join time) AND joined 48h+ ago.
   const fortyEightHoursAgo = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
   const { data: inactiveMembers } = await supabase
     .from('team_members')
-    .select('id, team_id, user_id')
+    .select('id, team_id, user_id, joined_at, last_active_at')
     .eq('status', 'active')
-    .lt('last_active_at', fortyEightHoursAgo);
+    .lt('joined_at', fortyEightHoursAgo);
 
-  for (const member of inactiveMembers ?? []) {
+  // Filter to only members who never visited (last_active_at within 5s of joined_at)
+  const neverVisited = (inactiveMembers ?? []).filter((m) => {
+    const joined = new Date(m.joined_at).getTime();
+    const lastActive = new Date(m.last_active_at).getTime();
+    return Math.abs(lastActive - joined) < 5000;
+  });
+
+  for (const member of neverVisited) {
     const { data: markedMember } = await supabase
       .from('team_members')
       .update({ status: 'replaced', replaced_at: nowIso })

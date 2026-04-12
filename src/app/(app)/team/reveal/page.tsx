@@ -31,6 +31,14 @@ export default async function TeamRevealPage() {
 
   const db = await createServiceRoleClient();
 
+  // Mark member as active (visited reveal page)
+  await db
+    .from('team_members')
+    .update({ last_active_at: new Date().toISOString() })
+    .eq('team_id', resolvedState.team.id)
+    .eq('user_id', resolvedState.userId)
+    .eq('status', 'active');
+
   const { data: rawMembers } = await db
     .from('team_members')
     .select('*')
