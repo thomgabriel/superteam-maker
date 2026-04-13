@@ -3,53 +3,118 @@
 import { createServiceRoleClient, createServerSupabaseClient } from '@/lib/supabase/server';
 import { trackEvent } from '@/lib/analytics.server';
 import { sendMatchNotification } from '@/lib/email';
+import { logError } from '@/lib/monitoring';
 import { revalidatePath } from 'next/cache';
 import { scoreCandidate } from '@/lib/matchmaking/scoring';
 import { getFlexMacroRoles } from '@/lib/matchmaking/roles';
 import { MATCHMAKING_CONFIG, MIN_EXTRA_MEMBER_SCORE } from '@/lib/matchmaking/config';
+import { sanitizeTeamProfileUpdate } from '@/lib/team-profile';
 import type { EnrichedPoolUser } from '@/types/database';
+
+const REQUEST_EXTRA_MEMBER_RATE_LIMIT_MAX = 3;
+const REQUEST_EXTRA_MEMBER_RATE_LIMIT_WINDOW_SECONDS = 60;
+
+async function trackTeamActionEvent(
+  event: Parameters<typeof trackEvent>[0],
+  logEvent: string,
+) {
+  try {
+    await trackEvent(event);
+  } catch (error) {
+    logError(logEvent, error, {
+      eventName: event.event,
+      route: event.route ?? undefined,
+      userId: event.userId ?? undefined,
+    });
+  }
+}
+
+async function checkActionRateLimit(
+  db: Awaited<ReturnType<typeof createServerSupabaseClient>>,
+  key: string,
+  maxRequests: number,
+  windowSeconds: number,
+) {
+  const { data, error } = await db.rpc('consume_action_rate_limit', {
+    p_key: key,
+    p_max_requests: maxRequests,
+    p_window_seconds: windowSeconds,
+  });
+
+  if (error) {
+    logError('action_rate_limit.consume_failed', error, { key });
+    return { allowed: false, remaining: 0, retryAfterSeconds: windowSeconds };
+  }
+
+  const payload =
+    data && typeof data === 'object' && !Array.isArray(data)
+      ? (data as {
+          allowed?: boolean;
+          remaining?: number;
+          retry_after_seconds?: number;
+        })
+      : {};
+
+  return {
+    allowed: payload.allowed !== false,
+    remaining:
+      typeof payload.remaining === 'number' ? payload.remaining : maxRequests,
+    retryAfterSeconds:
+      typeof payload.retry_after_seconds === 'number'
+        ? payload.retry_after_seconds
+        : windowSeconds,
+  };
+}
 
 export async function claimLeadership(teamId: string) {
   const supabase = await createServerSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Not authenticated');
 
-  const serviceClient = await createServiceRoleClient();
+  // RPC uses auth.uid() internally — no user ID passed
+  const { data, error } = await supabase.rpc('claim_team_leadership', {
+    p_team_id: teamId,
+  });
 
-  const { data, error } = await serviceClient
-    .from('teams')
-    .update({
-      leader_id: user.id,
-      leader_claimed_at: new Date().toISOString(),
-      status: 'active',
-    })
-    .eq('id', teamId)
-    .is('leader_id', null)
-    .select()
-    .single();
-
-  if (error || !data) {
-    return { success: false, message: 'Outro membro já assumiu a liderança.' };
+  if (error) {
+    logError('team.claim_leadership.rpc_failed', error, { teamId, userId: user.id });
+    return { success: false, message: 'Não foi possível concluir a liderança agora. Tente novamente.' };
   }
 
-  await serviceClient
-    .from('team_members')
-    .update({ is_leader: true })
-    .eq('team_id', teamId)
-    .eq('user_id', user.id);
+  const result = data && typeof data === 'object' && 'success' in data
+    ? (data as { success: boolean; message?: string })
+    : null;
 
-  await trackEvent({
+  if (!result) {
+    logError('team.claim_leadership.unexpected_rpc_shape', new Error('Unexpected RPC response'), {
+      teamId, userId: user.id,
+    });
+    return { success: false, message: 'Não foi possível concluir a liderança agora. Tente novamente.' };
+  }
+
+  if (!result.success) {
+    const messages: Record<string, string> = {
+      not_member: 'Apenas membros ativos do time podem assumir a liderança.',
+      already_claimed: 'Outro membro já assumiu a liderança.',
+    };
+    return {
+      success: false,
+      message: messages[result.message ?? ''] ?? 'Outro membro já assumiu a liderança.',
+    };
+  }
+
+  await trackTeamActionEvent({
     event: 'leader_claimed',
     userId: user.id,
     route: `/team/${teamId}`,
     properties: { team_id: teamId },
-  });
-  await trackEvent({
+  }, 'team.claim_leadership.track_failed');
+  await trackTeamActionEvent({
     event: 'team_activated',
     userId: user.id,
     route: `/team/${teamId}`,
     properties: { team_id: teamId },
-  });
+  }, 'team.activate.track_failed');
 
   revalidatePath(`/team/${teamId}`);
   return { success: true };
@@ -62,32 +127,37 @@ export async function updateTeamProfile(
     idea_title?: string;
     idea_description?: string;
     project_category?: string;
-  },
+  } & Record<string, unknown>,
 ) {
   const supabase = await createServerSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Not authenticated');
 
-  // Use service role — sb_publishable_ anon key doesn't pass RLS context
-  const serviceClient = await createServiceRoleClient();
+  const sanitized = sanitizeTeamProfileUpdate(data);
+  if (!sanitized.ok) {
+    return { success: false, message: sanitized.message };
+  }
 
-  const { data: team } = await serviceClient
+  // Pre-check for UX (RLS teams_leader_update is the real enforcement)
+  const { data: team } = await supabase
     .from('teams')
     .select('leader_id')
     .eq('id', teamId)
-    .single();
+    .maybeSingle();
 
   if (team?.leader_id !== user.id) {
     return { success: false, message: 'Apenas o líder pode editar.' };
   }
 
-  const { error } = await serviceClient
+  // RLS teams_leader_update policy enforces leader_id = auth.uid()
+  const { error } = await supabase
     .from('teams')
-    .update({ ...data, updated_at: new Date().toISOString() })
+    .update({ ...sanitized.updates, updated_at: new Date().toISOString() })
     .eq('id', teamId);
 
   if (error) {
-    return { success: false, message: error.message };
+    logError('team.update_profile.failed', error, { teamId, userId: user.id });
+    return { success: false, message: 'Não foi possível salvar as alterações. Tente novamente.' };
   }
 
   revalidatePath(`/team/${teamId}`);
@@ -99,20 +169,51 @@ export async function requestExtraMember(teamId: string) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Not authenticated');
 
-  const db = await createServiceRoleClient();
+  // Rate limiting via SECURITY DEFINER RPC — works with user-scoped client
+  const rateLimit = await checkActionRateLimit(
+    supabase,
+    `request-extra-member:${user.id}:${teamId}`,
+    REQUEST_EXTRA_MEMBER_RATE_LIMIT_MAX,
+    REQUEST_EXTRA_MEMBER_RATE_LIMIT_WINDOW_SECONDS,
+  );
 
-  // Verify caller is leader
-  const { data: team } = await db
+  if (!rateLimit.allowed) {
+    return {
+      success: false,
+      message: `Muitas tentativas em pouco tempo. Tente novamente em ${rateLimit.retryAfterSeconds}s.`,
+    };
+  }
+
+  // Leader verification via user-scoped client (teams_member_read RLS)
+  const { data: team } = await supabase
     .from('teams')
     .select('leader_id, name')
     .eq('id', teamId)
-    .single();
+    .maybeSingle();
 
   if (team?.leader_id !== user.id) {
     return { success: false, message: 'Apenas o líder pode pedir um membro.' };
   }
 
-  // Check team has exactly 3 active members
+  // Service role needed: profile_roles and profile_interests RLS only allows
+  // reading own data, but scoring needs all teammates' secondary roles/interests.
+  const db = await createServiceRoleClient();
+
+  // Count members separately (don't rely on !inner join which excludes broken profiles)
+  const { count: memberCount } = await db
+    .from('team_members')
+    .select('*', { count: 'exact', head: true })
+    .eq('team_id', teamId)
+    .eq('status', 'active');
+
+  if ((memberCount ?? 0) >= 4) {
+    return { success: false, message: 'O time já tem 4 membros.' };
+  }
+  if ((memberCount ?? 0) < 3) {
+    return { success: false, message: 'O time precisa ter pelo menos 3 membros.' };
+  }
+
+  // Fetch enriched member data for scoring (inner join is fine here — only used for scoring)
   const { data: members } = await db
     .from('team_members')
     .select(`
@@ -131,15 +232,7 @@ export async function requestExtraMember(teamId: string) {
     .eq('team_id', teamId)
     .eq('status', 'active');
 
-  if (!members || members.length >= 4) {
-    return { success: false, message: 'O time já tem 4 membros.' };
-  }
-  if (members.length < 3) {
-    return { success: false, message: 'O time precisa ter pelo menos 3 membros.' };
-  }
-
-  // Build enriched team members for scoring
-  const teamMembers: EnrichedPoolUser[] = members.map((m) => {
+  const teamMembers: EnrichedPoolUser[] = (members ?? []).map((m) => {
     const profile = Array.isArray(m.profiles) ? m.profiles[0] : m.profiles;
     const secondaryRoles = profile.profile_roles?.map((r: { role: string }) => r.role) ?? [];
     return {
@@ -155,7 +248,7 @@ export async function requestExtraMember(teamId: string) {
     };
   });
 
-  // Fetch waiting pool candidates
+  // Pool scan — same service-role client (reads all waiting entries across users)
   const { data: poolEntries } = await db
     .from('matchmaking_pool')
     .select(`
@@ -178,9 +271,7 @@ export async function requestExtraMember(teamId: string) {
     return { success: false, message: 'Ninguém compatível na fila agora. Tente mais tarde.' };
   }
 
-  // Score each candidate and find the best
   const candidates: { enriched: EnrichedPoolUser; score: number }[] = [];
-
   const maxWaitMs = Math.max(
     ...poolEntries.map((e) => Date.now() - new Date(e.created_at).getTime()),
     1,
@@ -200,60 +291,83 @@ export async function requestExtraMember(teamId: string) {
       waiting_since: entry.created_at,
       flex_macro_roles: getFlexMacroRoles(profile.primary_role, secondaryRoles),
     };
-
     const score = scoreCandidate(enriched, teamMembers, maxWaitMs, MATCHMAKING_CONFIG.weights);
     candidates.push({ enriched, score });
   }
 
-  // Sort by score descending, pick best above threshold
   candidates.sort((a, b) => b.score - a.score);
-  const best = candidates[0];
+  const eligibleCandidates = candidates.filter((c) => c.score >= MIN_EXTRA_MEMBER_SCORE);
 
-  if (!best || best.score < MIN_EXTRA_MEMBER_SCORE) {
+  if (eligibleCandidates.length === 0) {
     return { success: false, message: 'Ninguém compatível na fila agora. Tente mais tarde.' };
   }
 
-  // Add to team
-  const { error: insertError } = await db
-    .from('team_members')
-    .insert({
-      team_id: teamId,
-      user_id: best.enriched.user_id,
-      specific_role: best.enriched.primary_role,
-      macro_role: best.enriched.macro_role,
-      is_leader: false,
-      status: 'active',
-    });
+  let assignedCandidate: EnrichedPoolUser | null = null;
 
-  if (insertError) {
-    return { success: false, message: 'Erro ao adicionar membro. Tente novamente.' };
+  // Assignment loop — RPC uses auth.uid() for leader check, derives role from profile
+  for (const candidate of eligibleCandidates) {
+    const { data: rpcResult, error: rpcError } = await supabase.rpc(
+      'assign_pool_candidate_to_team',
+      {
+        p_team_id: teamId,
+        p_candidate_user_id: candidate.enriched.user_id,
+      },
+    );
+
+    if (rpcError) {
+      logError('team.request_extra_member.assign_rpc_failed', rpcError, {
+        teamId,
+        userId: candidate.enriched.user_id,
+      });
+      continue;
+    }
+
+    const result = rpcResult && typeof rpcResult === 'object' && 'success' in rpcResult
+      ? (rpcResult as { success: boolean; code?: string })
+      : null;
+
+    if (!result) {
+      logError('team.request_extra_member.unexpected_rpc_shape', new Error('Unexpected RPC response'), {
+        teamId, userId: candidate.enriched.user_id,
+      });
+      continue;
+    }
+
+    if (result.success) {
+      assignedCandidate = candidate.enriched;
+      break;
+    }
+
+    if (result.code === 'team_full') {
+      return { success: false, message: 'O time já tem 4 membros.' };
+    }
+
+    // already_claimed, already_assigned, no_profile — try next
+    continue;
   }
 
-  // Mark pool entry as assigned
-  await db
-    .from('matchmaking_pool')
-    .update({ status: 'assigned', updated_at: new Date().toISOString() })
-    .eq('user_id', best.enriched.user_id)
-    .eq('status', 'waiting');
+  if (!assignedCandidate) {
+    return { success: false, message: 'Ninguém compatível na fila agora. Tente mais tarde.' };
+  }
 
-  // Send email notification
+  // Email — read new user email via service role (cross-user access)
   const { data: newUserData } = await db
     .from('users')
     .select('email')
-    .eq('id', best.enriched.user_id)
-    .single();
+    .eq('id', assignedCandidate.user_id)
+    .maybeSingle();
 
   if (newUserData?.email && team?.name) {
     await sendMatchNotification(newUserData.email, team.name);
   }
 
-  await trackEvent({
+  await trackTeamActionEvent({
     event: 'matched_to_team',
-    userId: best.enriched.user_id,
+    userId: assignedCandidate.user_id,
     route: `/team/${teamId}`,
     properties: { team_id: teamId, source: 'leader_request' },
-  });
+  }, 'team.request_extra_member.track_failed');
 
   revalidatePath(`/team/${teamId}`);
-  return { success: true, memberName: best.enriched.name };
+  return { success: true, memberName: assignedCandidate.name };
 }

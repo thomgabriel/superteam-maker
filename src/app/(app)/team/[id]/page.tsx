@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { createServiceRoleClient } from '@/lib/supabase/server';
+import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { MemberCard } from '@/components/team/member-card';
 import { ClaimLeaderButton } from '@/components/team/claim-leader-button';
 import { LeaderPanel } from '@/components/team/leader-panel';
@@ -8,6 +8,7 @@ import Image from 'next/image';
 import type { Team } from '@/types/database';
 import { resolveAuthenticatedUserState } from '@/lib/user-state';
 import { Card } from '@/components/ui/card';
+import { logError } from '@/lib/monitoring';
 
 export const dynamic = 'force-dynamic';
 
@@ -42,23 +43,36 @@ export default async function TeamPage({
     redirect(resolvedState.redirectPath);
   }
 
-  const db = await createServiceRoleClient();
+  const db = await createServerSupabaseClient();
+  let memberLoadWarning: string | null = null;
 
-  // Mark member as active (visited team page)
-  await db
-    .from('team_members')
-    .update({ last_active_at: new Date().toISOString() })
-    .eq('team_id', teamId)
-    .eq('user_id', resolvedState.userId)
-    .eq('status', 'active');
+  // RPC uses auth.uid() — no user ID parameter needed
+  const { error: lastActiveError } = await db.rpc('update_member_last_active', {
+    p_team_id: teamId,
+  });
+
+  if (lastActiveError) {
+    logError('team.page.last_active_update_failed', lastActiveError, {
+      teamId,
+      userId: resolvedState.userId,
+    });
+  }
 
   // Fetch members and profiles separately — the join via user_id doesn't resolve
   // through Supabase's relation inference (team_members.user_id → users, not profiles)
-  const { data: rawMembers } = await db
+  const { data: rawMembers, error: rawMembersError } = await db
     .from('team_members')
     .select('*')
     .eq('team_id', teamId)
     .eq('status', 'active');
+
+  if (rawMembersError) {
+    logError('team.page.members_fetch_failed', rawMembersError, {
+      teamId,
+      userId: resolvedState.userId,
+    });
+    memberLoadWarning = 'Algumas informações do time não puderam ser carregadas agora.';
+  }
 
   const memberUserIds = (rawMembers ?? []).map((m) => m.user_id);
   let profiles:
@@ -81,10 +95,22 @@ export default async function TeamPage({
     .in('user_id', memberUserIds);
 
   if (profilesWithSocials.error) {
+    logError('team.page.member_profiles_fetch_failed', profilesWithSocials.error, {
+      teamId,
+      userId: resolvedState.userId,
+    });
     const profilesWithoutSocials = await db
       .from('profiles')
       .select('user_id, name, phone_number, primary_role, macro_role, seniority')
       .in('user_id', memberUserIds);
+
+    if (profilesWithoutSocials.error) {
+      logError('team.page.member_profiles_fallback_failed', profilesWithoutSocials.error, {
+        teamId,
+        userId: resolvedState.userId,
+      });
+      memberLoadWarning = 'Algumas informações do time não puderam ser carregadas agora.';
+    }
 
     profiles = (profilesWithoutSocials.data ?? []).map((profile) => ({
       ...profile,
@@ -130,6 +156,13 @@ export default async function TeamPage({
       </div>
 
       <div className="relative z-10 mx-auto w-full max-w-6xl space-y-8">
+        {memberLoadWarning && (
+          <Card className="rounded-[1.5rem] border-brand-yellow/24 bg-brand-yellow/10 px-5 py-4">
+            <p className="text-sm leading-7 text-brand-off-white/78">
+              {memberLoadWarning}
+            </p>
+          </Card>
+        )}
         <section className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr] lg:items-start">
           <Card className="rounded-[2rem] border-brand-green/30 bg-[linear-gradient(180deg,rgba(27,35,29,0.96),rgba(27,35,29,0.72))] p-6 sm:p-7">
             <Image src="/brand/logo/symbol.svg" alt="" width={42} height={42} className="opacity-90" />

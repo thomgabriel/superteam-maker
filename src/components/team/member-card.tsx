@@ -1,6 +1,7 @@
 import { MACRO_ROLE_LABELS } from "@/lib/constants";
 import { Card } from "@/components/ui/card";
 import { Tag } from "@/components/ui/tag";
+import { sanitizeExternalUrl } from "@/lib/security";
 
 interface MemberCardProps {
   name: string;
@@ -30,9 +31,9 @@ export function MemberCard({
     ? `https://wa.me/${phoneNumber.replace(/\D/g, "")}`
     : null;
   const socialLinks = [
-    { label: "LinkedIn", href: linkedinUrl },
-    { label: "GitHub", href: githubUrl },
-    { label: "X", href: xUrl },
+    { label: "LinkedIn", href: sanitizeExternalUrl(linkedinUrl) },
+    { label: "GitHub", href: sanitizeExternalUrl(githubUrl) },
+    { label: "X", href: sanitizeExternalUrl(xUrl) },
   ].filter((link): link is { label: string; href: string } =>
     Boolean(link.href),
   );

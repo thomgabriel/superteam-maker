@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { Tag } from "@/components/ui/tag";
+import { sanitizeExternalUrl } from "@/lib/security";
 import type { CopilotProject } from "@/types/colosseum";
 
 interface ProjectModalProps {
@@ -48,11 +49,11 @@ export function ProjectModal({ project, onClose }: ProjectModalProps) {
   const trackName = project.tracks[0]?.name ?? "Geral";
   const tags = project.tags;
   const links = [
-    ["Colosseum", project.links.colosseum],
-    ["GitHub", project.links.github],
-    ["Demo", project.links.demo],
-    ["Apresentação", project.links.presentation],
-    ["Demo técnico", project.links.technicalDemo],
+    ["Colosseum", sanitizeExternalUrl(project.links.colosseum)],
+    ["GitHub", sanitizeExternalUrl(project.links.github)],
+    ["Demo", sanitizeExternalUrl(project.links.demo)],
+    ["Apresentação", sanitizeExternalUrl(project.links.presentation)],
+    ["Demo técnico", sanitizeExternalUrl(project.links.technicalDemo)],
   ].filter((link): link is [string, string] => Boolean(link[1]));
 
   useEffect(() => {

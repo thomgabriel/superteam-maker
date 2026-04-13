@@ -11,7 +11,7 @@ import { LessonList } from "@/components/support/lesson-list";
 import { SuccessStories } from "@/components/support/success-stories";
 import { SupportTabs } from "@/components/support/support-tabs";
 import { PublicHeader } from "@/components/ui/public-header";
-import { createServerSupabaseClient, createServiceRoleClient } from "@/lib/supabase/server";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { isAdminUser } from "@/lib/admin";
 import { AppHeader } from "@/components/ui/app-header";
 
@@ -24,10 +24,9 @@ export default async function SupportPage() {
   let header;
   if (user) {
     const admin = isAdminUser(user);
-    const db = await createServiceRoleClient();
     const [{ data: membership }, { data: pool }] = await Promise.all([
-      db.from('team_members').select('team_id').eq('user_id', user.id).eq('status', 'active').maybeSingle(),
-      db.from('matchmaking_pool').select('status').eq('user_id', user.id).maybeSingle(),
+      supabase.from('team_members').select('team_id').eq('user_id', user.id).eq('status', 'active').maybeSingle(),
+      supabase.from('matchmaking_pool').select('status').eq('user_id', user.id).maybeSingle(),
     ]);
     const teamId = membership?.team_id ?? null;
     let statusPath: string | null = null;

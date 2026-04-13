@@ -1,4 +1,6 @@
 import { Resend } from 'resend';
+import { escapeHtml, sanitizeExternalUrl } from '@/lib/security';
+import { logError } from '@/lib/monitoring';
 
 const FROM_EMAIL = 'SuperteamMaker <noreply@updates.solarium.courses>';
 
@@ -24,10 +26,16 @@ export async function sendMatchNotification(
       return;
     }
 
+    const safeTeamName = escapeHtml(teamName);
+    const appUrl =
+      sanitizeExternalUrl(process.env.NEXT_PUBLIC_APP_URL) ??
+      'https://superteammaker.vercel.app/';
+    const teamRevealUrl = new URL('/team/reveal', appUrl).toString();
+
     await resend.emails.send({
       from: FROM_EMAIL,
       to,
-      subject: `Você tem um time! 🎉 ${teamName}`,
+      subject: `Você tem um time! 🎉 ${teamName.replace(/[\r\n]+/g, ' ').trim()}`,
       html: `
         <div style="margin:0; padding:32px 16px; background:#121914; font-family:Inter, Arial, sans-serif; color:#f5e8ca;">
           <div style="max-width:560px; margin:0 auto; border:1px solid rgba(0,139,76,0.24); border-radius:28px; overflow:hidden; background:linear-gradient(180deg,#1b231d 0%,#162018 100%);">
@@ -52,7 +60,7 @@ export async function sendMatchNotification(
                   Seu time
                 </div>
                 <div style="margin-top:10px; font-family:Archivo, Inter, Arial, sans-serif; font-size:34px; line-height:1.05; color:#ffd23f; font-weight:700;">
-                  ${teamName}
+                  ${safeTeamName}
                 </div>
               </div>
 
@@ -66,7 +74,7 @@ export async function sendMatchNotification(
               </div>
 
               <div style="margin-top:26px;">
-                <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://superteammaker.vercel.app'}/team/reveal"
+                <a href="${teamRevealUrl}"
                    style="display:inline-block; padding:15px 24px; border-radius:12px; background:#008b4c; color:#f5e8ca; text-decoration:none; font-family:Archivo, Inter, Arial, sans-serif; font-size:16px; font-weight:700;">
                   Ver meu time
                 </a>
@@ -82,6 +90,6 @@ export async function sendMatchNotification(
     });
   } catch (error) {
     // Email failure should not block matchmaking
-    console.error('[email] Failed to send match notification:', error);
+    logError('email.match_notification_failed', error, { to, teamName });
   }
 }

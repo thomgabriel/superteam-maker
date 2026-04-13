@@ -3,8 +3,10 @@ import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { persistAttributionForUser } from '@/lib/attribution';
 import { trackEvent } from '@/lib/analytics.server';
-import { resolveUserStateForUserId } from '@/lib/user-state';
+import { resolveUserStateWithClient } from '@/lib/user-state';
+import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { logError } from '@/lib/monitoring';
+import { getSafeRedirectPath } from '@/lib/security';
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
@@ -44,11 +46,16 @@ export async function GET(request: Request) {
           route: '/auth/callback',
         });
 
-        const resolvedState = await resolveUserStateForUserId(user.id);
-        return NextResponse.redirect(`${origin}${next ?? resolvedState.redirectPath}`);
+        const supabaseForState = await createServerSupabaseClient();
+        const resolvedState = await resolveUserStateWithClient(user.id, supabaseForState);
+        return NextResponse.redirect(
+          `${origin}${getSafeRedirectPath(next, resolvedState.redirectPath)}`,
+        );
       }
 
-      return NextResponse.redirect(`${origin}${next ?? '/profile'}`);
+      return NextResponse.redirect(
+        `${origin}${getSafeRedirectPath(next, '/profile')}`,
+      );
     }
 
     logError('auth_callback.exchange_failed', exchangeError);

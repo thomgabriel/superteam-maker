@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers';
 import type { User } from '@/types/database';
-import { createServiceRoleClient } from '@/lib/supabase/server';
+import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { UTM_COOKIE_NAME } from '@/lib/attribution-constants';
 
 export interface AttributionData {
@@ -40,7 +40,7 @@ export async function persistAttributionForUser(userId: string) {
     return;
   }
 
-  const db = await createServiceRoleClient();
+  const db = await createServerSupabaseClient();
   const { data: existingUser } = await db
     .from('users')
     .select('utm_source, utm_medium, utm_campaign')

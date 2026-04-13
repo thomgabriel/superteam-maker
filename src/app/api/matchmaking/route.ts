@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
 import { runMatchmakingJob } from '@/lib/matchmaking/job';
 import { logError, logInfo } from '@/lib/monitoring';
+import { hasValidCronAuthorization } from '@/lib/security';
 
 export async function GET(request: Request) {
   const authHeader = request.headers.get('authorization');
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (!hasValidCronAuthorization(authHeader, process.env.CRON_SECRET)) {
     logInfo('matchmaking.route.unauthorized');
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }

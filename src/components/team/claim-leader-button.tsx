@@ -11,11 +11,17 @@ export function ClaimLeaderButton({ teamId }: { teamId: string }) {
 
   async function handleClaim() {
     setLoading(true);
-    const result = await claimLeadership(teamId);
-    if (!result.success) {
-      setMessage(result.message ?? 'Erro ao assumir liderança');
+    setMessage(null);
+    try {
+      const result = await claimLeadership(teamId);
+      if (!result.success) {
+        setMessage(result.message ?? 'Erro ao assumir liderança');
+      }
+    } catch {
+      setMessage('Erro inesperado ao assumir liderança.');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }
 
   return (

@@ -16,18 +16,32 @@ export function LeaderPanel({ team }: { team: Team }) {
   const [projectCategory, setProjectCategory] = useState(team.project_category ?? '');
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   async function handleSave() {
     setSaving(true);
-    await updateTeamProfile(team.id, {
-      name,
-      idea_title: ideaTitle || undefined,
-      idea_description: ideaDescription || undefined,
-      project_category: projectCategory || undefined,
-    });
-    setSaving(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    setSaved(false);
+    setErrorMessage(null);
+    try {
+      const result = await updateTeamProfile(team.id, {
+        name,
+        idea_title: ideaTitle || undefined,
+        idea_description: ideaDescription || undefined,
+        project_category: projectCategory || undefined,
+      });
+
+      if (!result.success) {
+        setErrorMessage(result.message ?? 'Não foi possível salvar agora.');
+        return;
+      }
+
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch {
+      setErrorMessage('Não foi possível salvar agora.');
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -53,6 +67,11 @@ export function LeaderPanel({ team }: { team: Team }) {
       </Card>
 
       <div className="grid gap-4">
+        {errorMessage && (
+          <p className="rounded-lg bg-red-900/30 px-4 py-2 text-sm text-red-300">
+            {errorMessage}
+          </p>
+        )}
         <div>
           <label className="mb-2 block text-xs font-medium uppercase tracking-[0.14em] text-brand-off-white/54">
             Nome do time

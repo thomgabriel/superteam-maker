@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { createServiceRoleClient } from '@/lib/supabase/server';
+import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { MemberCard } from '@/components/team/member-card';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -7,6 +7,7 @@ import { TrackPageView } from '@/components/ui/track-event';
 import { resolveAuthenticatedUserState } from '@/lib/user-state';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { logError } from '@/lib/monitoring';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,27 +30,47 @@ export default async function TeamRevealPage() {
     redirect(resolvedState.redirectPath);
   }
 
-  const db = await createServiceRoleClient();
+  const db = await createServerSupabaseClient();
+  let memberLoadWarning: string | null = null;
 
-  // Mark member as active (visited reveal page)
-  await db
-    .from('team_members')
-    .update({ last_active_at: new Date().toISOString() })
-    .eq('team_id', resolvedState.team.id)
-    .eq('user_id', resolvedState.userId)
-    .eq('status', 'active');
+  const { error: lastActiveError } = await db.rpc('update_member_last_active', {
+    p_team_id: resolvedState.team.id,
+  });
 
-  const { data: rawMembers } = await db
+  if (lastActiveError) {
+    logError('team.reveal.last_active_update_failed', lastActiveError, {
+      teamId: resolvedState.team.id,
+      userId: resolvedState.userId,
+    });
+  }
+
+  const { data: rawMembers, error: rawMembersError } = await db
     .from('team_members')
     .select('*')
     .eq('team_id', resolvedState.team.id)
     .eq('status', 'active');
 
+  if (rawMembersError) {
+    logError('team.reveal.members_fetch_failed', rawMembersError, {
+      teamId: resolvedState.team.id,
+      userId: resolvedState.userId,
+    });
+    memberLoadWarning = 'Algumas informações do time não puderam ser carregadas agora.';
+  }
+
   const memberUserIds = (rawMembers ?? []).map((m) => m.user_id);
-  const { data: profiles } = await db
+  const { data: profiles, error: profilesError } = await db
     .from('profiles')
     .select('user_id, name, primary_role, macro_role, seniority')
     .in('user_id', memberUserIds);
+
+  if (profilesError) {
+    logError('team.reveal.member_profiles_fetch_failed', profilesError, {
+      teamId: resolvedState.team.id,
+      userId: resolvedState.userId,
+    });
+    memberLoadWarning = 'Algumas informações do time não puderam ser carregadas agora.';
+  }
 
   const profileMap = new Map((profiles ?? []).map((p) => [p.user_id, p]));
   const members = (rawMembers ?? []).map((m) => ({
@@ -74,6 +95,13 @@ export default async function TeamRevealPage() {
       <div className="relative z-10 mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-6xl items-center">
         <div className="grid w-full gap-8 lg:grid-cols-[0.92fr_1.08fr] lg:items-center">
           <div className="max-w-2xl">
+            {memberLoadWarning && (
+              <Card className="mb-6 rounded-[1.5rem] border-brand-yellow/24 bg-brand-yellow/10 px-5 py-4">
+                <p className="text-sm leading-7 text-brand-off-white/78">
+                  {memberLoadWarning}
+                </p>
+              </Card>
+            )}
             <p className="inline-flex rounded-full border border-brand-yellow/30 bg-brand-yellow/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-brand-yellow">
               Time formado
             </p>

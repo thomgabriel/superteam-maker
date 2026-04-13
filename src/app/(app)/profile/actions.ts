@@ -4,6 +4,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { persistAttributionForUser } from '@/lib/attribution';
 import { trackEvent } from '@/lib/analytics.server';
 import { getMacroRole } from '@/lib/matchmaking/roles';
+import { sanitizeProfileUrl } from '@/lib/security';
 import { redirect } from 'next/navigation';
 
 export interface ProfileFormData {
@@ -27,6 +28,9 @@ export async function createProfile(data: ProfileFormData) {
   }
 
   const macroRole = getMacroRole(data.primary_role);
+  const linkedinUrl = sanitizeProfileUrl('linkedin', data.linkedin_url);
+  const githubUrl = sanitizeProfileUrl('github', data.github_url);
+  const xUrl = sanitizeProfileUrl('x', data.x_url);
 
   const { error } = await supabase.rpc('create_profile_and_enter_pool', {
     p_user_id: user.id,
@@ -37,9 +41,9 @@ export async function createProfile(data: ProfileFormData) {
     p_years_experience: data.years_experience,
     p_secondary_roles: data.secondary_roles,
     p_interests: data.interests,
-    p_linkedin_url: data.linkedin_url,
-    p_github_url: data.github_url,
-    p_x_url: data.x_url,
+    p_linkedin_url: linkedinUrl,
+    p_github_url: githubUrl,
+    p_x_url: xUrl,
   });
 
   if (error) {

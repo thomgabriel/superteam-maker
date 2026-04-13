@@ -1,4 +1,5 @@
-import { createServerSupabaseClient, createServiceRoleClient } from '@/lib/supabase/server';
+import { createServerSupabaseClient } from '@/lib/supabase/server';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import type { MatchmakingPoolEntry, Profile, Team, TeamMember } from '@/types/database';
 
 export type UserState = 'needs_profile' | 'waiting_match' | 'matched' | 'team_active';
@@ -39,6 +40,10 @@ export function getRedirectPath(state: UserState, teamId?: string): string {
   }
 }
 
+/**
+ * Authenticated request path — uses the user-scoped Supabase client (RLS enforced).
+ * Call from server components and actions where a user session exists.
+ */
 export async function resolveAuthenticatedUserState(): Promise<ResolvedUserState | null> {
   const supabase = await createServerSupabaseClient();
   const {
@@ -49,12 +54,17 @@ export async function resolveAuthenticatedUserState(): Promise<ResolvedUserState
     return null;
   }
 
-  return resolveUserStateForUserId(user.id);
+  return resolveUserStateWithClient(user.id, supabase);
 }
 
-export async function resolveUserStateForUserId(userId: string): Promise<ResolvedUserState> {
-  const db = await createServiceRoleClient();
-
+/**
+ * Privileged path — caller provides a specific Supabase client.
+ * Use from cron jobs / background tasks that pass a service-role client.
+ */
+export async function resolveUserStateWithClient(
+  userId: string,
+  db: SupabaseClient,
+): Promise<ResolvedUserState> {
   const [{ data: profile }, { data: poolEntry }, { data: teamMember }] = await Promise.all([
     db.from('profiles').select('*').eq('user_id', userId).maybeSingle<Profile>(),
     db.from('matchmaking_pool').select('*').eq('user_id', userId).maybeSingle<MatchmakingPoolEntry>(),

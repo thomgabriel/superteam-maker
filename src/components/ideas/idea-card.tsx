@@ -1,5 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { Tag } from "@/components/ui/tag";
+import { sanitizeExternalUrl } from "@/lib/security";
 import type { CopilotProject } from "@/types/colosseum";
 
 interface IdeaCardProps {
@@ -10,6 +11,9 @@ interface IdeaCardProps {
 export function IdeaCard({ project, onOpen }: IdeaCardProps) {
   const trackName = project.tracks[0]?.name ?? "Geral";
   const tags = project.tags;
+  const githubUrl = sanitizeExternalUrl(project.links.github);
+  const demoUrl = sanitizeExternalUrl(project.links.demo);
+  const colosseumUrl = sanitizeExternalUrl(project.links.colosseum);
   const primaryTags = tags
     ? [...new Set([trackName, ...tags.primitives.slice(0, 2)])]
     : [trackName];
@@ -80,9 +84,9 @@ export function IdeaCard({ project, onOpen }: IdeaCardProps) {
           >
             Ver detalhes
           </button>
-          {project.links.github && (
+          {githubUrl && (
             <a
-              href={project.links.github}
+              href={githubUrl}
               target="_blank"
               rel="noreferrer"
               className="text-xs text-brand-off-white/42 underline-offset-2 hover:text-brand-off-white/70 hover:underline"
@@ -90,9 +94,9 @@ export function IdeaCard({ project, onOpen }: IdeaCardProps) {
               GitHub
             </a>
           )}
-          {project.links.demo && (
+          {demoUrl && (
             <a
-              href={project.links.demo}
+              href={demoUrl}
               target="_blank"
               rel="noreferrer"
               className="text-xs text-brand-off-white/42 underline-offset-2 hover:text-brand-off-white/70 hover:underline"
@@ -100,9 +104,9 @@ export function IdeaCard({ project, onOpen }: IdeaCardProps) {
               Demo
             </a>
           )}
-          {project.links.colosseum && (
+          {colosseumUrl && (
             <a
-              href={project.links.colosseum}
+              href={colosseumUrl}
               target="_blank"
               rel="noreferrer"
               className="text-xs text-brand-off-white/42 underline-offset-2 hover:text-brand-off-white/70 hover:underline"

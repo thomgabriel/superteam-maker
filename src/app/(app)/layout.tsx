@@ -1,4 +1,4 @@
-import { createServerSupabaseClient, createServiceRoleClient } from '@/lib/supabase/server';
+import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { isAdminUser } from '@/lib/admin';
 import { AppHeader } from '@/components/ui/app-header';
 
@@ -16,10 +16,9 @@ export default async function AppLayout({
   let teamId: string | null = null;
   let statusPath: string | null = null;
   if (user) {
-    const db = await createServiceRoleClient();
     const [{ data: membership }, { data: pool }] = await Promise.all([
-      db.from('team_members').select('team_id').eq('user_id', user.id).eq('status', 'active').maybeSingle(),
-      db.from('matchmaking_pool').select('status').eq('user_id', user.id).maybeSingle(),
+      supabase.from('team_members').select('team_id').eq('user_id', user.id).eq('status', 'active').maybeSingle(),
+      supabase.from('matchmaking_pool').select('status').eq('user_id', user.id).maybeSingle(),
     ]);
     teamId = membership?.team_id ?? null;
     if (!teamId) {
