@@ -86,6 +86,7 @@ export interface Team {
   idea_title: string | null;
   idea_description: string | null;
   project_category: string | null;
+  whatsapp_group_url: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -100,6 +101,7 @@ export interface TeamMember {
   joined_at: string;
   last_active_at: string;
   status: MemberStatus;
+  is_ready: boolean;
   replaced_at: string | null;
 }
 

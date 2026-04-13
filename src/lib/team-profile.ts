@@ -12,6 +12,7 @@ type TeamProfileFieldResult =
         idea_title?: string | null;
         idea_description?: string | null;
         project_category?: string | null;
+        whatsapp_group_url?: string | null;
       };
     }
   | {
@@ -40,6 +41,7 @@ export function sanitizeTeamProfileUpdate(
     idea_title?: string | null;
     idea_description?: string | null;
     project_category?: string | null;
+    whatsapp_group_url?: string | null;
   } = {};
 
   const name = trimString(input.name);
@@ -87,6 +89,26 @@ export function sanitizeTeamProfileUpdate(
       };
     }
     updates.project_category = projectCategory;
+  }
+
+  const whatsappGroupUrl = normalizeOptionalString(input.whatsapp_group_url);
+  if (whatsappGroupUrl !== undefined) {
+    if (whatsappGroupUrl) {
+      if (whatsappGroupUrl.length > 200) {
+        return { ok: false, message: 'Link do WhatsApp muito longo.' };
+      }
+      try {
+        const parsed = new URL(whatsappGroupUrl);
+        if (parsed.protocol !== 'https:' || parsed.hostname !== 'chat.whatsapp.com' || parsed.pathname.length <= 1 || parsed.search || parsed.hash) {
+          return { ok: false, message: 'Use um link válido de grupo do WhatsApp (https://chat.whatsapp.com/...).' };
+        }
+        updates.whatsapp_group_url = parsed.toString();
+      } catch {
+        return { ok: false, message: 'Use um link válido de grupo do WhatsApp (https://chat.whatsapp.com/...).' };
+      }
+    } else {
+      updates.whatsapp_group_url = null;
+    }
   }
 
   return { ok: true, updates };

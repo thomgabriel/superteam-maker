@@ -9,6 +9,7 @@ interface MemberCardProps {
   macroRole: string;
   seniority: string;
   isLeader: boolean;
+  isReady?: boolean;
   phoneNumber?: string;
   linkedinUrl?: string | null;
   githubUrl?: string | null;
@@ -21,6 +22,7 @@ export function MemberCard({
   specificRole,
   macroRole,
   isLeader,
+  isReady,
   phoneNumber,
   linkedinUrl,
   githubUrl,
@@ -56,6 +58,9 @@ export function MemberCard({
           <span className="rounded-full border border-brand-yellow/30 bg-brand-yellow/12 px-3 py-1 text-xs font-medium uppercase tracking-[0.14em] text-brand-yellow">
             Líder
           </span>
+        )}
+        {!isLeader && isReady !== undefined && (
+          <span className={`h-3 w-3 rounded-full ${isReady ? 'bg-brand-emerald' : 'bg-brand-off-white/20'}`} title={isReady ? 'Pronto' : 'Aguardando'} />
         )}
       </div>
 

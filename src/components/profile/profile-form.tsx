@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { createProfile, type ProfileFormData } from '@/app/(app)/profile/actions';
+import { createProfile, updateProfile, type ProfileFormData } from '@/app/(app)/profile/actions';
 import { SPECIFIC_ROLES, INTERESTS } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,21 +9,31 @@ import { Select } from '@/components/ui/select';
 import { Tag } from '@/components/ui/tag';
 import { Card } from '@/components/ui/card';
 
-export function ProfileForm() {
+interface ProfileFormProps {
+  mode?: 'create' | 'edit';
+  initialData?: ProfileFormData;
+  redirectTo?: string;
+}
+
+export function ProfileForm({ mode = 'create', initialData, redirectTo }: ProfileFormProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [yearsExperienceInput, setYearsExperienceInput] = useState('');
-  const [form, setForm] = useState<ProfileFormData>({
-    name: '',
-    phone_number: '',
-    linkedin_url: '',
-    github_url: '',
-    x_url: '',
-    primary_role: '',
-    secondary_roles: [],
-    years_experience: 0,
-    interests: [],
-  });
+  const [yearsExperienceInput, setYearsExperienceInput] = useState(
+    initialData?.years_experience?.toString() ?? '',
+  );
+  const [form, setForm] = useState<ProfileFormData>(
+    initialData ?? {
+      name: '',
+      phone_number: '',
+      linkedin_url: '',
+      github_url: '',
+      x_url: '',
+      primary_role: '',
+      secondary_roles: [],
+      years_experience: 0,
+      interests: [],
+    },
+  );
 
   function updateField<K extends keyof ProfileFormData>(
     key: K,
@@ -53,12 +63,18 @@ export function ProfileForm() {
     setError(null);
 
     try {
-      await createProfile({
+      const payload = {
         ...form,
         years_experience: yearsExperienceInput.trim() === '' ? 0 : Number(yearsExperienceInput),
-      });
+      };
+
+      if (mode === 'edit') {
+        await updateProfile(payload, redirectTo);
+      } else {
+        await createProfile(payload);
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao criar perfil');
+      setError(err instanceof Error ? err.message : 'Erro ao salvar perfil');
       setLoading(false);
     }
   }
@@ -288,7 +304,9 @@ export function ProfileForm() {
         fullWidth
         className="shadow-[0_16px_40px_rgba(0,139,76,0.18)]"
       >
-        {loading ? 'Criando perfil...' : 'Entrar na fila'}
+        {loading
+          ? (mode === 'edit' ? 'Salvando...' : 'Criando perfil...')
+          : (mode === 'edit' ? 'Salvar alterações' : 'Encontrar meu time')}
       </Button>
     </form>
   );

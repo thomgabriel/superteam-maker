@@ -1,6 +1,7 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { isAdminUser } from '@/lib/admin';
 import { AppHeader } from '@/components/ui/app-header';
+import { resolveUserStateWithClient } from '@/lib/user-state';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,19 +17,16 @@ export default async function AppLayout({
   let teamId: string | null = null;
   let statusPath: string | null = null;
   if (user) {
-    const [{ data: membership }, { data: pool }] = await Promise.all([
-      supabase.from('team_members').select('team_id').eq('user_id', user.id).eq('status', 'active').maybeSingle(),
-      supabase.from('matchmaking_pool').select('status').eq('user_id', user.id).maybeSingle(),
-    ]);
-    teamId = membership?.team_id ?? null;
+    const resolvedState = await resolveUserStateWithClient(user.id, supabase);
+    teamId = resolvedState.team?.id ?? null;
     if (!teamId) {
-      statusPath = pool?.status === 'waiting' ? '/queue' : '/profile';
+      statusPath = resolvedState.redirectPath;
     }
   }
 
   return (
     <>
-      <AppHeader admin={admin} teamId={teamId} statusPath={statusPath} />
+      <AppHeader admin={admin} teamId={teamId} statusPath={statusPath} showProfileLink={statusPath === '/queue'} />
       {children}
     </>
   );

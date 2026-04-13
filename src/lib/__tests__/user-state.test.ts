@@ -26,8 +26,8 @@ describe('getUserState', () => {
     expect(getUserState(mockProfile, mockPoolAssigned, mockMember, mockTeamActive)).toBe('team_active');
   });
 
-  it('returns waiting_match as fallback when profile exists but no pool/team', () => {
-    expect(getUserState(mockProfile, null, null, null)).toBe('waiting_match');
+  it('returns needs_requeue when profile exists but no pool entry and no team', () => {
+    expect(getUserState(mockProfile, null, null, null)).toBe('needs_requeue');
   });
 
   it('keeps assigned users without team membership in waiting_match', () => {
@@ -46,7 +46,9 @@ describe('getRedirectPath', () => {
   it('maps states to correct paths', () => {
     expect(getRedirectPath('needs_profile')).toBe('/profile');
     expect(getRedirectPath('waiting_match')).toBe('/queue');
+    expect(getRedirectPath('needs_requeue')).toBe('/requeue');
     expect(getRedirectPath('matched')).toBe('/team/reveal');
+    expect(getRedirectPath('matched', 'team-123')).toBe('/team/team-123');
     expect(getRedirectPath('team_active', 'team-123')).toBe('/team/team-123');
   });
 });

@@ -5,6 +5,7 @@ import { TrackPageView } from "@/components/ui/track-event";
 import { UtmCapture } from "@/components/ui/utm-capture";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { resolveAuthenticatedUserState } from '@/lib/user-state';
 
 const BENEFITS = [
   {
@@ -51,7 +52,21 @@ const IDEA_SIGNALS = [
   { label: "Filtros", value: "Busca por categoria, track e tecnologia" },
 ];
 
-export default function LandingPage() {
+export const dynamic = 'force-dynamic';
+
+export default async function LandingPage() {
+  let resolvedState = null;
+  try {
+    resolvedState = await resolveAuthenticatedUserState();
+  } catch {
+    // During Supabase outage, treat as unauthenticated and show landing page
+  }
+
+  const primaryHref = resolvedState?.redirectPath ?? '/profile';
+  const primaryLabel = resolvedState ? 'Continuar de onde parei' : 'Encontrar meu time';
+  const headerHref = resolvedState?.redirectPath ?? '/auth';
+  const headerLabel = 'Entrar';
+
   return (
     <main className="relative overflow-hidden">
       <TrackPageView event="landing_view" />
@@ -108,10 +123,10 @@ export default function LandingPage() {
                 Suporte
               </Link>
               <Link
-                href="/auth"
+                href={headerHref}
                 className="text-sm font-medium text-brand-off-white/70 transition-colors hover:text-brand-off-white"
               >
-                Entrar
+                {headerLabel}
               </Link>
             </div>
           </div>
@@ -136,9 +151,9 @@ export default function LandingPage() {
               </p>
 
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                <Link href="/profile" className="sm:min-w-52">
+                <Link href={primaryHref} className="sm:min-w-52">
                   <Button variant="primary" size="lg" fullWidth>
-                    Encontrar meu time
+                    {primaryLabel}
                   </Button>
                 </Link>
                 <a

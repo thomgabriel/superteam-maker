@@ -2,12 +2,15 @@ import { createServerSupabaseClient } from '@/lib/supabase/server';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { MatchmakingPoolEntry, Profile, Team, TeamMember } from '@/types/database';
 
-export type UserState = 'needs_profile' | 'waiting_match' | 'matched' | 'team_active';
+export type UserState = 'needs_profile' | 'waiting_match' | 'needs_requeue' | 'matched' | 'team_active';
+
+export type RequeueReason = 'replaced' | 'team_inactive' | 'generic';
 
 export interface ResolvedUserState {
   userId: string;
   state: UserState;
   redirectPath: string;
+  requeueReason: RequeueReason | null;
   profile: Profile | null;
   poolEntry: MatchmakingPoolEntry | null;
   teamMember: TeamMember | null;
@@ -22,8 +25,11 @@ export function getUserState(
 ): UserState {
   if (!profile) return 'needs_profile';
   if (teamMember && team?.status === 'active') return 'team_active';
+  if (teamMember && team?.status === 'inactive') return 'needs_requeue';
   if (teamMember) return 'matched';
   if (poolEntry?.status === 'waiting') return 'waiting_match';
+  // Has profile but no pool entry and no active team member — dead end
+  if (!poolEntry) return 'needs_requeue';
   return 'waiting_match';
 }
 
@@ -33,6 +39,8 @@ export function getRedirectPath(state: UserState, teamId?: string): string {
       return '/profile';
     case 'waiting_match':
       return '/queue';
+    case 'needs_requeue':
+      return '/requeue';
     case 'matched':
       return teamId ? `/team/${teamId}` : '/team/reveal';
     case 'team_active':
@@ -65,7 +73,11 @@ export async function resolveUserStateWithClient(
   userId: string,
   db: SupabaseClient,
 ): Promise<ResolvedUserState> {
-  const [{ data: profile }, { data: poolEntry }, { data: teamMember }] = await Promise.all([
+  const [
+    { data: profile, error: profileError },
+    { data: poolEntry, error: poolEntryError },
+    { data: teamMember, error: teamMemberError },
+  ] = await Promise.all([
     db.from('profiles').select('*').eq('user_id', userId).maybeSingle<Profile>(),
     db.from('matchmaking_pool').select('*').eq('user_id', userId).maybeSingle<MatchmakingPoolEntry>(),
     db
@@ -76,18 +88,53 @@ export async function resolveUserStateWithClient(
       .maybeSingle<TeamMember>(),
   ]);
 
+  if (profileError) throw profileError;
+  if (poolEntryError) throw poolEntryError;
+  if (teamMemberError) throw teamMemberError;
+
   let team: Team | null = null;
   if (teamMember) {
-    const { data } = await db.from('teams').select('*').eq('id', teamMember.team_id).maybeSingle<Team>();
+    const { data, error } = await db.from('teams').select('*').eq('id', teamMember.team_id).maybeSingle<Team>();
+    if (error) throw error;
     team = data ?? null;
   }
 
   const state = getUserState(profile ?? null, poolEntry ?? null, teamMember ?? null, team);
 
+  // Compute requeueReason when in needs_requeue state.
+  // NOTE: On the authenticated path (user-scoped client), the team_members_read RLS policy
+  // only exposes rows from teams where the user has an active membership. After deactivation
+  // or replacement, the user has no active membership, so historical rows (inactive/replaced)
+  // are not visible. These queries will return empty and fall through to 'generic'.
+  // This is acceptable for MVP — the user still reaches /requeue and can re-enter the pool.
+  // For specific messaging, a SECURITY DEFINER RPC would be needed.
+  let requeueReason: RequeueReason | null = null;
+  if (state === 'needs_requeue' && profile) {
+    const { data: inactiveMember } = await db
+      .from('team_members')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('status', 'inactive')
+      .limit(1);
+
+    if (inactiveMember && inactiveMember.length > 0) {
+      requeueReason = 'team_inactive';
+    } else {
+      const { data: replacedRows } = await db
+        .from('team_members')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('status', 'replaced')
+        .limit(1);
+      requeueReason = replacedRows && replacedRows.length > 0 ? 'replaced' : 'generic';
+    }
+  }
+
   return {
     userId,
     state,
     redirectPath: getRedirectPath(state, team?.id),
+    requeueReason,
     profile: profile ?? null,
     poolEntry: poolEntry ?? null,
     teamMember: teamMember ?? null,

@@ -3,6 +3,7 @@ import { QueueStatus } from "@/components/queue/queue-status";
 import Image from "next/image";
 import { resolveAuthenticatedUserState } from "@/lib/user-state";
 import { TrackPageView } from "@/components/ui/track-event";
+import { createServerSupabaseClient } from '@/lib/supabase/server';
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +13,15 @@ export default async function QueuePage() {
   if (resolvedState.state !== "waiting_match") {
     redirect(resolvedState.redirectPath);
   }
+
+  // Load profile interests for recap card + pool count for context
+  const supabase = await createServerSupabaseClient();
+  const interests = resolvedState.profile
+    ? (await supabase.from('profile_interests').select('interest').eq('profile_id', resolvedState.profile.id)).data ?? []
+    : [];
+
+  const { data: poolCountData } = await supabase.rpc('get_waiting_pool_count');
+  const poolCount = typeof poolCountData === 'number' ? poolCountData : null;
 
   return (
     <main className="relative min-h-screen overflow-hidden px-4 py-8 sm:px-6 lg:px-8">
@@ -35,7 +45,13 @@ export default async function QueuePage() {
       </div>
 
       <div className="relative z-10 mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-6xl items-start pt-8 sm:pt-16 lg:pt-18">
-        <QueueStatus userId={resolvedState.userId} />
+        <QueueStatus
+          userId={resolvedState.userId}
+          profile={resolvedState.profile}
+          interests={interests.map((i) => i.interest)}
+          poolEntryCreatedAt={resolvedState.poolEntry?.created_at ?? null}
+          poolCount={poolCount}
+        />
       </div>
     </main>
   );

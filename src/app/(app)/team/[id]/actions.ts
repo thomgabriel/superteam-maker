@@ -117,6 +117,7 @@ export async function claimLeadership(teamId: string) {
   }, 'team.activate.track_failed');
 
   revalidatePath(`/team/${teamId}`);
+  revalidatePath('/team/reveal');
   return { success: true };
 }
 
@@ -209,8 +210,8 @@ export async function requestExtraMember(teamId: string) {
   if ((memberCount ?? 0) >= 4) {
     return { success: false, message: 'O time já tem 4 membros.' };
   }
-  if ((memberCount ?? 0) < 3) {
-    return { success: false, message: 'O time precisa ter pelo menos 3 membros.' };
+  if ((memberCount ?? 0) < 2) {
+    return { success: false, message: 'O time precisa ter pelo menos 2 membros.' };
   }
 
   // Fetch enriched member data for scoring (inner join is fine here — only used for scoring)
@@ -370,4 +371,37 @@ export async function requestExtraMember(teamId: string) {
 
   revalidatePath(`/team/${teamId}`);
   return { success: true, memberName: assignedCandidate.name };
+}
+
+export async function toggleReady(teamId: string) {
+  const supabase = await createServerSupabaseClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+
+  const { data, error } = await supabase.rpc('toggle_member_ready', {
+    p_team_id: teamId,
+  });
+
+  if (error) {
+    logError('team.toggle_ready.rpc_failed', error, { teamId, userId: user.id });
+    return { success: false };
+  }
+
+  const result = data && typeof data === 'object' && 'success' in data
+    ? (data as { success: boolean; is_ready?: boolean })
+    : null;
+
+  if (!result) {
+    logError('team.toggle_ready.unexpected_rpc_shape', new Error('Unexpected RPC response'), {
+      teamId, userId: user.id,
+    });
+    return { success: false };
+  }
+
+  if (!result.success) {
+    return { success: false };
+  }
+
+  revalidatePath(`/team/${teamId}`);
+  return { success: true, isReady: result.is_ready ?? false };
 }

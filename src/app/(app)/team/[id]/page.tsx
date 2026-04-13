@@ -9,12 +9,15 @@ import type { Team } from '@/types/database';
 import { resolveAuthenticatedUserState } from '@/lib/user-state';
 import { Card } from '@/components/ui/card';
 import { logError } from '@/lib/monitoring';
+import { ReadyToggle } from '@/components/team/ready-toggle';
 
 export const dynamic = 'force-dynamic';
 
 interface TeamPageMember {
   id: string;
+  user_id: string;
   is_leader: boolean;
+  is_ready?: boolean;
   profiles: {
     name: string;
     phone_number?: string;
@@ -227,29 +230,75 @@ export default async function TeamPage({
               </h2>
             </div>
 
+            {resolvedState.team.status === 'active' && (() => {
+              const nonLeaders = members.filter((m: { is_leader: boolean }) => !m.is_leader);
+              const readyCount = nonLeaders.filter((m: { is_ready?: boolean }) => m.is_ready).length;
+              return nonLeaders.length > 0 ? (
+                <p className="text-xs text-brand-off-white/42">
+                  {readyCount}/{nonLeaders.length} prontos para começar
+                </p>
+              ) : null;
+            })()}
+
             <div className="grid gap-3">
               {(members as TeamPageMember[] | null)?.map((member) => (
-                <MemberCard
-                  key={member.id}
-                  name={member.profiles.name}
-                  specificRole={member.profiles.primary_role}
-                  macroRole={member.profiles.macro_role}
-                  seniority={member.profiles.seniority}
-                  isLeader={member.is_leader}
-                  phoneNumber={member.profiles.phone_number}
-                  linkedinUrl={member.profiles.linkedin_url}
-                  githubUrl={member.profiles.github_url}
-                  xUrl={member.profiles.x_url}
-                  showPhone
-                />
+                <div key={member.id}>
+                  <MemberCard
+                    name={member.profiles.name}
+                    specificRole={member.profiles.primary_role}
+                    macroRole={member.profiles.macro_role}
+                    seniority={member.profiles.seniority}
+                    isLeader={member.is_leader}
+                    isReady={!member.is_leader ? member.is_ready : undefined}
+                    phoneNumber={member.profiles.phone_number}
+                    linkedinUrl={member.profiles.linkedin_url}
+                    githubUrl={member.profiles.github_url}
+                    xUrl={member.profiles.x_url}
+                    showPhone
+                  />
+                  {member.user_id === resolvedState.userId && !member.is_leader && resolvedState.team!.status === 'active' && (
+                    <ReadyToggle teamId={teamId} isReady={member.is_ready ?? false} />
+                  )}
+                </div>
               ))}
             </div>
           </div>
 
           <div className="space-y-4">
+            {resolvedState.team.whatsapp_group_url && (
+              <Card className="rounded-[1.75rem] border-brand-yellow/20 bg-[linear-gradient(135deg,rgba(255,210,63,0.10),rgba(27,35,29,0.90))] p-5">
+                <p className="text-xs uppercase tracking-[0.18em] text-brand-yellow/78">
+                  Grupo do time
+                </p>
+                <p className="mt-3 text-sm leading-7 text-brand-off-white/72">
+                  Entre no WhatsApp para alinhar a ideia e combinar os próximos passos.
+                </p>
+                <a
+                  href={resolvedState.team.whatsapp_group_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-5 flex w-full items-center justify-center gap-3 rounded-xl bg-brand-emerald px-6 py-4 text-base font-bold text-brand-off-white transition-colors hover:bg-brand-emerald/90"
+                >
+                  <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5 fill-current">
+                    <path d="M19.05 4.94A9.94 9.94 0 0012 2a9.94 9.94 0 00-8.58 15l-1.33 4.86 4.98-1.3A10 10 0 1019.05 4.94zM12 20.2a8.2 8.2 0 01-4.17-1.14l-.3-.18-2.95.77.79-2.88-.2-.3A8.2 8.2 0 1112 20.2zm4.5-6.15c-.24-.12-1.4-.7-1.62-.77-.22-.08-.38-.12-.54.11-.16.24-.62.78-.76.94-.14.16-.28.18-.52.06-.24-.12-1.02-.38-1.94-1.2-.72-.64-1.2-1.44-1.34-1.68-.14-.24-.01-.37.11-.49.11-.11.24-.28.36-.42.12-.14.16-.24.24-.4.08-.16.04-.31-.02-.43-.06-.12-.54-1.3-.74-1.78-.2-.47-.4-.4-.54-.4h-.46c-.16 0-.42.06-.64.3s-.84.82-.84 2c0 1.18.86 2.32.98 2.48.12.16 1.68 2.56 4.08 3.6.57.24 1.01.38 1.36.48.57.18 1.09.15 1.5.09.46-.07 1.4-.57 1.6-1.13.2-.56.2-1.04.14-1.13-.06-.1-.22-.16-.46-.28z" />
+                  </svg>
+                  Entrar no grupo do WhatsApp
+                </a>
+              </Card>
+            )}
             {!hasLeader && <ClaimLeaderButton teamId={teamId} />}
-            {isLeader && <LeaderPanel team={resolvedState.team as Team} />}
-            {isLeader && members.length === 3 && <RequestMemberButton teamId={teamId} />}
+            {isLeader && (() => {
+              const nonLeaders = members.filter((m: { is_leader: boolean }) => !m.is_leader);
+              return (
+                <LeaderPanel
+                  team={resolvedState.team as Team}
+                  memberCount={members.length}
+                  readyCount={nonLeaders.filter((m: { is_ready?: boolean }) => m.is_ready).length}
+                  allReady={nonLeaders.length > 0 && nonLeaders.every((m: { is_ready?: boolean }) => m.is_ready)}
+                />
+              );
+            })()}
+            {isLeader && members.length >= 2 && members.length < 4 && <RequestMemberButton teamId={teamId} />}
 
             {!isLeader && resolvedState.team.idea_title && (
               <Card className="rounded-[1.75rem] border-brand-green/24 bg-brand-dark-green/72 p-5">

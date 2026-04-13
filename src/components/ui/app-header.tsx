@@ -9,6 +9,7 @@ interface AppHeaderProps {
   admin: boolean;
   teamId: string | null;
   statusPath: string | null;
+  showProfileLink?: boolean;
 }
 
 function getLinkClassName(active: boolean, tone: 'default' | 'admin' = 'default') {
@@ -23,7 +24,7 @@ function getLinkClassName(active: boolean, tone: 'default' | 'admin' = 'default'
     : 'rounded-full border border-brand-green/25 bg-brand-dark-green/55 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-brand-off-white/62 transition-colors hover:border-brand-green hover:text-brand-off-white';
 }
 
-export function AppHeader({ admin, teamId, statusPath }: AppHeaderProps) {
+export function AppHeader({ admin, teamId, statusPath, showProfileLink }: AppHeaderProps) {
   const pathname = usePathname();
   const teamActive = pathname.startsWith('/team');
   const queueActive = pathname.startsWith('/queue');
@@ -50,9 +51,16 @@ export function AppHeader({ admin, teamId, statusPath }: AppHeaderProps) {
               Time
             </Link>
           ) : statusPath === '/queue' ? (
-            <Link href="/queue" className={getLinkClassName(queueActive)}>
-              Fila
-            </Link>
+            <>
+              <Link href="/queue" className={getLinkClassName(queueActive)}>
+                Fila
+              </Link>
+              {showProfileLink && (
+                <Link href="/profile" className={getLinkClassName(profileActive)}>
+                  Perfil
+                </Link>
+              )}
+            </>
           ) : statusPath === '/profile' ? (
             <Link href="/profile" className={getLinkClassName(profileActive)}>
               Perfil

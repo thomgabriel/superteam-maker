@@ -173,6 +173,26 @@ async function updateMatchmakingRunRecord(
     .eq('id', runId);
 }
 
+export async function deactivateTeam(supabase: SupabaseClient, teamId: string) {
+  const { data, error } = await supabase.rpc('deactivate_team_and_members', {
+    p_team_id: teamId,
+  });
+
+  if (error) {
+    logError('matchmaking.deactivate_team.rpc_failed', error, { teamId });
+    throw error;
+  }
+
+  if (data !== true) {
+    const unexpected = new Error('Team deactivation RPC returned unexpected result');
+    logError('matchmaking.deactivate_team.unexpected_result', unexpected, {
+      teamId,
+      result: data ?? null,
+    });
+    throw unexpected;
+  }
+}
+
 async function performMaintenance(supabase: SupabaseClient): Promise<MaintenanceResult> {
   const notes: string[] = [];
   let replacementsPerformed = 0;
@@ -195,16 +215,23 @@ async function performMaintenance(supabase: SupabaseClient): Promise<Maintenance
     notes.push(`reset ${reclaimedTeams.length} stale leader claims`);
   }
 
-  const { data: deactivatedTeams } = await supabase
+  const { data: expiredTeams } = await supabase
     .from('teams')
-    .update({ status: 'inactive', updated_at: nowIso })
+    .select('id')
     .eq('status', 'pending_activation')
     .is('leader_id', null)
-    .lt('activation_deadline_at', nowIso)
-    .select('id');
+    .lt('activation_deadline_at', nowIso);
 
-  if (deactivatedTeams?.length) {
-    notes.push(`deactivated ${deactivatedTeams.length} unclaimed teams`);
+  if (expiredTeams?.length) {
+    for (const team of expiredTeams) {
+      try {
+        await deactivateTeam(supabase, team.id);
+      } catch {
+        notes.push(`failed to deactivate team ${team.id}`);
+        continue;
+      }
+    }
+    notes.push(`deactivated ${expiredTeams.length} unclaimed teams`);
   }
 
   // Only replace members who never visited the team page (last_active_at was never
@@ -345,10 +372,11 @@ async function performMaintenance(supabase: SupabaseClient): Promise<Maintenance
       .eq('status', 'active');
 
     if ((count ?? 0) < MATCHMAKING_CONFIG.minTeamSize) {
-      await supabase
-        .from('teams')
-        .update({ status: 'inactive', updated_at: nowIso })
-        .eq('id', member.team_id);
+      try {
+        await deactivateTeam(supabase, member.team_id);
+      } catch {
+        notes.push(`failed to deactivate team ${member.team_id}`);
+      }
     }
   }
 

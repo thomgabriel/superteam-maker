@@ -4,7 +4,6 @@ import { NextResponse } from 'next/server';
 import { persistAttributionForUser } from '@/lib/attribution';
 import { trackEvent } from '@/lib/analytics.server';
 import { resolveUserStateWithClient } from '@/lib/user-state';
-import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { logError } from '@/lib/monitoring';
 import { getSafeRedirectPath } from '@/lib/security';
 
@@ -46,8 +45,9 @@ export async function GET(request: Request) {
           route: '/auth/callback',
         });
 
-        const supabaseForState = await createServerSupabaseClient();
-        const resolvedState = await resolveUserStateWithClient(user.id, supabaseForState);
+        // Reuse the same client that exchanged the auth code so state resolution
+        // sees the in-memory session created in this request.
+        const resolvedState = await resolveUserStateWithClient(user.id, supabase);
         return NextResponse.redirect(
           `${origin}${getSafeRedirectPath(next, resolvedState.redirectPath)}`,
         );
