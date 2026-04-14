@@ -14,9 +14,14 @@ function getResendClient() {
   return new Resend(apiKey);
 }
 
+export function buildMatchNotificationUrl(appUrl: string, teamId?: string) {
+  return new URL(teamId ? `/team/${teamId}` : '/team/reveal', appUrl).toString();
+}
+
 export async function sendMatchNotification(
   to: string,
   teamName: string,
+  teamId?: string,
 ) {
   try {
     const resend = getResendClient();
@@ -29,13 +34,13 @@ export async function sendMatchNotification(
     const safeTeamName = escapeHtml(teamName);
     const appUrl =
       sanitizeExternalUrl(process.env.NEXT_PUBLIC_APP_URL) ??
-      'https://superteammaker.vercel.app/';
-    const teamRevealUrl = new URL('/team/reveal', appUrl).toString();
+      'https://ideiadosonhos.com/';
+    const teamUrl = buildMatchNotificationUrl(appUrl, teamId);
 
     await resend.emails.send({
       from: FROM_EMAIL,
       to,
-      subject: `Você tem um time! 🎉 ${teamName.replace(/[\r\n]+/g, ' ').trim()}`,
+      subject: `Seu time está pronto no Superteam · ${teamName.replace(/[\r\n]+/g, ' ').trim()}`,
       html: `
         <div style="margin:0; padding:32px 16px; background:#121914; font-family:Inter, Arial, sans-serif; color:#f5e8ca;">
           <div style="max-width:560px; margin:0 auto; border:1px solid rgba(0,139,76,0.24); border-radius:28px; overflow:hidden; background:linear-gradient(180deg,#1b231d 0%,#162018 100%);">
@@ -45,12 +50,12 @@ export async function sendMatchNotification(
               </div>
 
               <h1 style="margin:20px 0 0; font-family:Archivo, Inter, Arial, sans-serif; font-size:46px; line-height:0.98; letter-spacing:-0.04em; color:#f5e8ca;">
-                Você caiu em um
-                <span style="display:block; color:#ffd23f;">time forte.</span>
+                Seu time já está
+                <span style="display:block; color:#ffd23f;">pronto.</span>
               </h1>
 
               <p style="margin:20px 0 0; max-width:420px; font-size:17px; line-height:1.7; color:rgba(245,232,202,0.72);">
-                Seu time já está pronto. Entre na plataforma, conheça o grupo e comecem a construir juntos.
+                Entre na plataforma para conhecer o grupo, entrar no WhatsApp e começar a organizar a ideia com o time.
               </p>
             </div>
 
@@ -69,14 +74,14 @@ export async function sendMatchNotification(
                   Próximo passo
                 </div>
                 <div style="margin-top:10px; font-size:15px; line-height:1.75; color:rgba(245,232,202,0.82);">
-                  Entre na plataforma para ver os membros do seu time, assumir a liderança se quiser e começar a organizar o grupo.
+                  Abra seu time para ver os membros, combinar os próximos passos e começar a construir com clareza.
                 </div>
               </div>
 
               <div style="margin-top:26px;">
-                <a href="${teamRevealUrl}"
+                <a href="${teamUrl}"
                    style="display:inline-block; padding:15px 24px; border-radius:12px; background:#008b4c; color:#f5e8ca; text-decoration:none; font-family:Archivo, Inter, Arial, sans-serif; font-size:16px; font-weight:700;">
-                  Ver meu time
+                  Abrir meu time
                 </a>
               </div>
 

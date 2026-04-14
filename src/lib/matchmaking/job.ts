@@ -77,6 +77,7 @@ async function notifyMatchedUsers(
   supabase: SupabaseClient,
   userIds: string[],
   teamName: string,
+  teamId?: string,
 ) {
   if (userIds.length === 0) {
     return;
@@ -95,7 +96,7 @@ async function notifyMatchedUsers(
     matchedUsers
       .map((user) => user.email)
       .filter((email): email is string => Boolean(email))
-      .map((email) => sendMatchNotification(email, teamName)),
+      .map((email) => sendMatchNotification(email, teamName, teamId)),
   );
 }
 
@@ -360,7 +361,7 @@ async function performMaintenance(supabase: SupabaseClient): Promise<Maintenance
           .maybeSingle();
 
         if (team?.name) {
-          await notifyMatchedUsers(supabase, [replacement.user_id], team.name);
+          await notifyMatchedUsers(supabase, [replacement.user_id], team.name, member.team_id);
         }
       }
     }
@@ -578,6 +579,7 @@ export async function runMatchmakingJob(
         supabase,
         eligibleMembers.map((member) => member.user_id),
         teamRow.name,
+        teamRow.id,
       );
 
       teamsFormed += 1;

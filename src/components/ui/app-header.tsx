@@ -12,6 +12,12 @@ interface AppHeaderProps {
   showProfileLink?: boolean;
 }
 
+interface StatusLink {
+  href: string;
+  label: string;
+  active: boolean;
+}
+
 function getLinkClassName(active: boolean, tone: 'default' | 'admin' = 'default') {
   if (tone === 'admin') {
     return active
@@ -24,14 +30,85 @@ function getLinkClassName(active: boolean, tone: 'default' | 'admin' = 'default'
     : 'rounded-full border border-brand-green/25 bg-brand-dark-green/55 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-brand-off-white/62 transition-colors hover:border-brand-green hover:text-brand-off-white';
 }
 
+export function getStatusLinks({
+  teamId,
+  statusPath,
+  showProfileLink,
+  pathname,
+}: {
+  teamId: string | null;
+  statusPath: string | null;
+  showProfileLink?: boolean;
+  pathname: string;
+}): StatusLink[] {
+  if (teamId) {
+    return [
+      {
+        href: `/team/${teamId}`,
+        label: 'Time',
+        active: pathname.startsWith('/team'),
+      },
+    ];
+  }
+
+  if (statusPath === '/queue') {
+    return [
+      {
+        href: '/queue',
+        label: 'Fila',
+        active: pathname.startsWith('/queue'),
+      },
+      ...(showProfileLink
+        ? [
+            {
+              href: '/profile',
+              label: 'Perfil',
+              active: pathname.startsWith('/profile'),
+            },
+          ]
+        : []),
+    ];
+  }
+
+  if (statusPath === '/requeue') {
+    return [
+      {
+        href: '/requeue',
+        label: 'Recomeçar',
+        active: pathname.startsWith('/requeue'),
+      },
+      {
+        href: '/profile',
+        label: 'Perfil',
+        active: pathname.startsWith('/profile'),
+      },
+    ];
+  }
+
+  if (statusPath === '/profile') {
+    return [
+      {
+        href: '/profile',
+        label: 'Perfil',
+        active: pathname.startsWith('/profile'),
+      },
+    ];
+  }
+
+  return [];
+}
+
 export function AppHeader({ admin, teamId, statusPath, showProfileLink }: AppHeaderProps) {
   const pathname = usePathname();
-  const teamActive = pathname.startsWith('/team');
-  const queueActive = pathname.startsWith('/queue');
-  const profileActive = pathname.startsWith('/profile');
   const ideasActive = pathname.startsWith('/ideas');
   const supportActive = pathname.startsWith('/support');
   const adminActive = pathname.startsWith('/admin');
+  const statusLinks = getStatusLinks({
+    teamId,
+    statusPath,
+    showProfileLink,
+    pathname,
+  });
 
   return (
     <nav className="sticky top-0 z-30 border-b border-brand-green/15 bg-brand-dark-green/78 px-4 py-3 backdrop-blur-xl sm:px-6">
@@ -46,26 +123,11 @@ export function AppHeader({ admin, teamId, statusPath, showProfileLink }: AppHea
         </Link>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          {teamId ? (
-            <Link href={`/team/${teamId}`} className={getLinkClassName(teamActive)}>
-              Time
+          {statusLinks.map((link) => (
+            <Link key={link.href} href={link.href} className={getLinkClassName(link.active)}>
+              {link.label}
             </Link>
-          ) : statusPath === '/queue' ? (
-            <>
-              <Link href="/queue" className={getLinkClassName(queueActive)}>
-                Fila
-              </Link>
-              {showProfileLink && (
-                <Link href="/profile" className={getLinkClassName(profileActive)}>
-                  Perfil
-                </Link>
-              )}
-            </>
-          ) : statusPath === '/profile' ? (
-            <Link href="/profile" className={getLinkClassName(profileActive)}>
-              Perfil
-            </Link>
-          ) : null}
+          ))}
           <Link href="/ideas" className={getLinkClassName(ideasActive)}>
             Ideias
           </Link>

@@ -359,7 +359,7 @@ export async function requestExtraMember(teamId: string) {
     .maybeSingle();
 
   if (newUserData?.email && team?.name) {
-    await sendMatchNotification(newUserData.email, team.name);
+    await sendMatchNotification(newUserData.email, team.name, teamId);
   }
 
   await trackTeamActionEvent({
