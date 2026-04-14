@@ -2,7 +2,7 @@ import { Resend } from 'resend';
 import { escapeHtml, sanitizeExternalUrl } from '@/lib/security';
 import { logError } from '@/lib/monitoring';
 
-const FROM_EMAIL = 'SuperteamMaker <noreply@updates.solarium.courses>';
+const FROM_EMAIL = 'SuperteamMaker <noreply@ideiadosonhos.com>';
 
 function getResendClient() {
   const apiKey = process.env.RESEND_API_KEY;
@@ -40,7 +40,7 @@ export async function sendMatchNotification(
     await resend.emails.send({
       from: FROM_EMAIL,
       to,
-      subject: `Seu time está pronto no Superteam · ${teamName.replace(/[\r\n]+/g, ' ').trim()}`,
+      subject: `Seu time está pronto no SuperteamMaker · ${teamName.replace(/[\r\n]+/g, ' ').trim()}`,
       html: `
         <div style="margin:0; padding:32px 16px; background:#121914; font-family:Inter, Arial, sans-serif; color:#f5e8ca;">
           <div style="max-width:560px; margin:0 auto; border:1px solid rgba(0,139,76,0.24); border-radius:28px; overflow:hidden; background:linear-gradient(180deg,#1b231d 0%,#162018 100%);">
