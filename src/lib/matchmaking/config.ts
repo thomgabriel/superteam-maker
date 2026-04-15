@@ -3,6 +3,7 @@ export const MATCHMAKING_CONFIG = {
   minTeamSize: 3,
   minPoolSizeByRound: [20, 12, 6, 3],
   maxWaitMinutes: 60,
+  understaffedGraceHours: 24,
   weights: {
     roleBalance: 0.4,
     seniorityProximity: 0.3,

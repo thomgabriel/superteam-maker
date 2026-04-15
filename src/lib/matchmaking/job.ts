@@ -373,11 +373,38 @@ async function performMaintenance(supabase: SupabaseClient): Promise<Maintenance
       .eq('status', 'active');
 
     if ((count ?? 0) < MATCHMAKING_CONFIG.minTeamSize) {
-      try {
-        await deactivateTeam(supabase, member.team_id);
-      } catch {
-        notes.push(`failed to deactivate team ${member.team_id}`);
+      // Check if already marked as understaffed
+      const { data: teamRow } = await supabase
+        .from('teams')
+        .select('understaffed_at')
+        .eq('id', member.team_id)
+        .maybeSingle();
+
+      if (!teamRow?.understaffed_at) {
+        // First time below min — mark and give 24h grace period
+        await supabase
+          .from('teams')
+          .update({ understaffed_at: nowIso, updated_at: nowIso })
+          .eq('id', member.team_id);
+        notes.push(`team ${member.team_id} understaffed, 24h grace started`);
+      } else {
+        const understaffedSince = new Date(teamRow.understaffed_at).getTime();
+        const gracePeriodMs = MATCHMAKING_CONFIG.understaffedGraceHours * 60 * 60 * 1000;
+        if (Date.now() - understaffedSince >= gracePeriodMs) {
+          try {
+            await deactivateTeam(supabase, member.team_id);
+          } catch {
+            notes.push(`failed to deactivate team ${member.team_id}`);
+          }
+        }
       }
+    } else {
+      // Team recovered — clear understaffed marker
+      await supabase
+        .from('teams')
+        .update({ understaffed_at: null })
+        .eq('id', member.team_id)
+        .not('understaffed_at', 'is', null);
     }
   }
 

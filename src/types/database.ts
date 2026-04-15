@@ -87,6 +87,7 @@ export interface Team {
   idea_description: string | null;
   project_category: string | null;
   whatsapp_group_url: string | null;
+  understaffed_at: string | null;
   created_at: string;
   updated_at: string;
 }
