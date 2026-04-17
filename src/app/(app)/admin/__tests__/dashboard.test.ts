@@ -5,8 +5,9 @@ import {
   buildAdminOverview,
   buildAdminTeamRows,
   shouldCountTowardRequeueMetric,
+  type AdminDashboardTeam,
 } from '@/app/(app)/admin/dashboard';
-import type { MatchmakingRun, Team } from '@/types/database';
+import type { MatchmakingRun } from '@/types/database';
 
 describe('buildAdminOverview', () => {
   it('returns the operational headline metrics admins need first', () => {
@@ -105,16 +106,14 @@ describe('buildAdminTeamRows', () => {
           name: 'Orbit',
           status: 'active',
           leader_id: 'leader-1',
-          round_number: 1,
-          leader_claimed_at: '2026-04-13T12:00:00.000Z',
           activation_deadline_at: null,
           idea_title: 'Agent wallet',
-          idea_description: null,
-          project_category: null,
           whatsapp_group_url: 'https://chat.whatsapp.com/example',
+          submission_url: null,
+          submitted_at: null,
           created_at: '2026-04-13T11:00:00.000Z',
           updated_at: '2026-04-13T12:00:00.000Z',
-        } satisfies Team,
+        } satisfies AdminDashboardTeam,
       ],
       activeMemberCounts: {
         'team-1': 3,
@@ -153,11 +152,14 @@ describe('buildAdminTeamRows', () => {
         leaderLabel: 'Ada',
         whatsappLabel: 'Configurado',
         ideaLabel: 'Definida',
+        submissionLabel: '—',
         updatedAtLabel: '13/04/2026',
         detail: {
           deadlineLabel: 'sem data',
           whatsappUrl: 'https://chat.whatsapp.com/example',
           ideaTitle: 'Agent wallet',
+          submissionUrl: null,
+          submittedAtLabel: 'sem data',
           members: [
             {
               id: 'member-1',

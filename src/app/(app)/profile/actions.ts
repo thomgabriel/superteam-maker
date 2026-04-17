@@ -20,12 +20,25 @@ export interface ProfileFormData {
   interests: string[];
 }
 
+export interface ProfileEnhanceData {
+  phone_number: string;
+  linkedin_url: string;
+  github_url: string;
+  x_url: string;
+  secondary_roles: string[];
+  interests: string[];
+}
+
 export async function createProfile(data: ProfileFormData) {
   const supabase = await createServerSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
     throw new Error('Not authenticated');
+  }
+
+  if (!data.name.trim() || !data.primary_role || data.years_experience < 0) {
+    throw new Error('Preencha os campos obrigatórios.');
   }
 
   const macroRole = getMacroRole(data.primary_role);
@@ -36,21 +49,20 @@ export async function createProfile(data: ProfileFormData) {
   const { error } = await supabase.rpc('create_profile_and_enter_pool', {
     p_user_id: user.id,
     p_name: data.name,
-    p_phone_number: data.phone_number,
+    p_phone_number: data.phone_number ?? '',
     p_primary_role: data.primary_role,
     p_macro_role: macroRole,
     p_years_experience: data.years_experience,
-    p_secondary_roles: data.secondary_roles,
-    p_interests: data.interests,
+    p_secondary_roles: data.secondary_roles ?? [],
+    p_interests: data.interests ?? [],
     p_linkedin_url: linkedinUrl,
     p_github_url: githubUrl,
     p_x_url: xUrl,
   });
 
   if (error) {
-    // Profile already exists — just redirect to queue
     if (error.message.includes('duplicate key') || error.message.includes('unique constraint')) {
-      redirect('/queue');
+      redirect('/profile/enhance');
     }
     logError('profile.create.rpc_failed', error, { userId: user.id });
     throw new Error('Não foi possível criar seu perfil. Tente novamente.');
@@ -58,8 +70,8 @@ export async function createProfile(data: ProfileFormData) {
 
   try {
     await persistAttributionForUser(user.id);
-  } catch (error) {
-    logError('profile.create.attribution_failed', error, { userId: user.id });
+  } catch (err) {
+    logError('profile.create.attribution_failed', err, { userId: user.id });
   }
 
   const analyticsEvents = [
@@ -80,12 +92,53 @@ export async function createProfile(data: ProfileFormData) {
   for (const event of analyticsEvents) {
     try {
       await trackEvent(event);
-    } catch (error) {
-      logError('profile.create.track_failed', error, {
+    } catch (err) {
+      logError('profile.create.track_failed', err, {
         userId: user.id,
         eventName: event.event,
       });
     }
+  }
+
+  // Route through /profile/enhance so optional fields get a chance before pool entry.
+  redirect('/profile/enhance');
+}
+
+export async function enhanceProfile(data: ProfileEnhanceData) {
+  const supabase = await createServerSupabaseClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+
+  const { data: existing } = await supabase
+    .from('profiles')
+    .select('id, name, primary_role, macro_role, years_experience')
+    .eq('user_id', user.id)
+    .maybeSingle();
+
+  if (!existing) {
+    redirect('/profile');
+  }
+
+  const linkedinUrl = sanitizeProfileUrl('linkedin', data.linkedin_url);
+  const githubUrl = sanitizeProfileUrl('github', data.github_url);
+  const xUrl = sanitizeProfileUrl('x', data.x_url);
+
+  const { error } = await supabase.rpc('update_profile_details', {
+    p_name: existing.name,
+    p_phone_number: data.phone_number ?? '',
+    p_primary_role: existing.primary_role,
+    p_macro_role: existing.macro_role,
+    p_years_experience: existing.years_experience,
+    p_secondary_roles: data.secondary_roles ?? [],
+    p_interests: data.interests ?? [],
+    p_linkedin_url: linkedinUrl,
+    p_github_url: githubUrl,
+    p_x_url: xUrl,
+  });
+
+  if (error) {
+    logError('profile.enhance.rpc_failed', error, { userId: user.id });
+    throw new Error('Não foi possível salvar. Tente novamente.');
   }
 
   redirect('/queue');
@@ -96,8 +149,6 @@ export async function updateProfile(data: ProfileFormData, redirectTo?: string) 
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Not authenticated');
 
-  // State guard: only allow in waiting_match or needs_requeue
-  // Reuse the existing supabase client to avoid double auth roundtrip
   const { resolveUserStateWithClient } = await import('@/lib/user-state');
   const state = await resolveUserStateWithClient(user.id, supabase);
   if (state.state !== 'waiting_match' && state.state !== 'needs_requeue') {
@@ -111,7 +162,7 @@ export async function updateProfile(data: ProfileFormData, redirectTo?: string) 
 
   const { data: rpcData, error: rpcError } = await supabase.rpc('update_profile_details', {
     p_name: data.name,
-    p_phone_number: data.phone_number,
+    p_phone_number: data.phone_number ?? '',
     p_primary_role: data.primary_role,
     p_macro_role: macroRole,
     p_years_experience: data.years_experience,
@@ -127,14 +178,17 @@ export async function updateProfile(data: ProfileFormData, redirectTo?: string) 
     throw new Error('Não foi possível atualizar seu perfil. Tente novamente.');
   }
 
-  const result = rpcData && typeof rpcData === 'object' && 'success' in rpcData
-    ? (rpcData as { success: boolean; code?: string })
-    : null;
+  const result =
+    rpcData && typeof rpcData === 'object' && 'success' in rpcData
+      ? (rpcData as { success: boolean; code?: string })
+      : null;
 
   if (!result) {
-    logError('profile.update.unexpected_rpc_shape', new Error('Unexpected RPC response'), {
-      userId: user.id,
-    });
+    logError(
+      'profile.update.unexpected_rpc_shape',
+      new Error('Unexpected RPC response'),
+      { userId: user.id },
+    );
     throw new Error('Não foi possível atualizar seu perfil. Tente novamente.');
   }
 

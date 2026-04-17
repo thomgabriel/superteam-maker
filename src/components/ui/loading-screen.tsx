@@ -1,6 +1,19 @@
+'use client';
+
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
+import { Button } from '@/components/ui/button';
+
+const STALLED_AFTER_MS = 10_000;
 
 export function LoadingScreen() {
+  const [stalled, setStalled] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setStalled(true), STALLED_AFTER_MS);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <main className="relative flex min-h-screen items-center justify-center overflow-hidden px-4">
       <div className="pointer-events-none absolute inset-0">
@@ -19,6 +32,21 @@ export function LoadingScreen() {
         <p className="mt-5 text-xs uppercase tracking-[0.18em] text-brand-off-white/48">
           Carregando
         </p>
+
+        {stalled && (
+          <div className="mt-8 flex flex-col items-center gap-3">
+            <p className="text-sm text-brand-off-white/60">
+              Demorando mais que o esperado...
+            </p>
+            <Button
+              variant="accent"
+              size="sm"
+              onClick={() => window.location.reload()}
+            >
+              Tentar novamente
+            </Button>
+          </div>
+        )}
       </div>
     </main>
   );

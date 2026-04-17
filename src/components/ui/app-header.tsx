@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { logoutAction } from '@/app/(app)/actions';
+import { NotificationBell } from '@/components/notifications/notification-bell';
 
 interface AppHeaderProps {
   admin: boolean;
@@ -139,6 +140,7 @@ export function AppHeader({ admin, teamId, statusPath, showProfileLink }: AppHea
               Admin
             </Link>
           )}
+          <NotificationBell />
           <form action={logoutAction}>
             <button
               type="submit"

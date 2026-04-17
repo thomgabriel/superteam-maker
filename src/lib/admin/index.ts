@@ -24,4 +24,3 @@ export function isAdminUser(user: User | null): boolean {
   const email = user.email?.toLowerCase();
   return (email ? emailAllowlist.has(email) : false) || idAllowlist.has(user.id.toLowerCase());
 }
-
