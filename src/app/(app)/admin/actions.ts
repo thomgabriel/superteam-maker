@@ -59,7 +59,7 @@ export async function runMatchmakingNow() {
   }
 
   try {
-    const result = await runMatchmakingJob({ triggerSource: 'admin' });
+    const result = await runMatchmakingJob({ triggerSource: 'admin', runId });
 
     await db.rpc('end_matchmaking_run', {
       p_run_id: runId,

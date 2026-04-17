@@ -147,7 +147,10 @@ describe('runMatchmakingNow', () => {
 
     const result = await runMatchmakingNow();
     expect(result.success).toBe(true);
-    expect(runMatchmakingJob).toHaveBeenCalledWith({ triggerSource: 'admin' });
+    expect(runMatchmakingJob).toHaveBeenCalledWith({
+      triggerSource: 'admin',
+      runId: 'run-42',
+    });
     expect(revalidatePath).toHaveBeenCalledWith('/admin');
 
     expect(rpcCalls[0]).toEqual({

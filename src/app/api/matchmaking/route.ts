@@ -20,11 +20,6 @@ import { hasValidCronAuthorization } from '@/lib/security';
 //      canonical run row. We finalize even if the job threw, so a crashed run
 //      never wedges the scheduler by leaving a 'running' row behind.
 //
-// Note: runMatchmakingJob also writes its own internal matchmaking_runs row
-// (pre-existing behavior in src/lib/matchmaking/job.ts). That's expected — the
-// begin/end rows here are the canonical outer watchdog. A follow-up agent will
-// collapse them into a single row once the job file is refactored.
-
 export async function GET(request: Request) {
   const authHeader = request.headers.get('authorization');
   if (!hasValidCronAuthorization(authHeader, process.env.CRON_SECRET)) {
@@ -62,7 +57,7 @@ export async function GET(request: Request) {
 
   // 2. Do the work. Track failures via end_matchmaking_run('failed', ...).
   try {
-    const result = await runMatchmakingJob({ triggerSource: 'cron' });
+    const result = await runMatchmakingJob({ triggerSource: 'cron', runId });
 
     await db.rpc('end_matchmaking_run', {
       p_run_id: runId,

@@ -12,6 +12,9 @@ import { emit as dispatcherEmit } from '@/lib/notifications/dispatcher';
 interface RunMatchmakingJobOptions {
   triggerSource: 'cron' | 'admin';
   supabase?: SupabaseClient;
+  // Outer watchdog row id from begin_matchmaking_run, threaded through for
+  // Sentry log correlation only — the job does not write to matchmaking_runs.
+  runId?: string;
 }
 
 export interface MatchmakingJobResult {
@@ -141,40 +144,6 @@ export function getEligibleUsersForTeamAssignment(
   );
 }
 
-async function createMatchmakingRunRecord(
-  supabase: SupabaseClient,
-  triggerSource: RunMatchmakingJobOptions['triggerSource'],
-) {
-  const { data } = await supabase
-    .from('matchmaking_runs')
-    .insert({
-      trigger_source: triggerSource,
-      status: 'running',
-      pool_size: 0,
-      teams_formed: 0,
-      users_matched: 0,
-      replacements_performed: 0,
-    })
-    .select('id')
-    .single();
-
-  return data?.id ?? null;
-}
-
-async function updateMatchmakingRunRecord(
-  supabase: SupabaseClient,
-  runId: string | null,
-  values: Record<string, string | number | null>,
-) {
-  if (!runId) {
-    return;
-  }
-
-  await supabase
-    .from('matchmaking_runs')
-    .update(values)
-    .eq('id', runId);
-}
 
 export async function deactivateTeam(
   supabase: SupabaseClient,
@@ -979,12 +948,11 @@ export async function runMatchmakingJob(
 ): Promise<MatchmakingJobResult> {
   const startedAt = Date.now();
   const supabase = options.supabase ?? createSupabaseServiceClient();
-  const runId = await createMatchmakingRunRecord(supabase, options.triggerSource);
   const notes: string[] = [];
 
   logInfo('matchmaking.job.started', {
     triggerSource: options.triggerSource,
-    runId,
+    runId: options.runId ?? null,
   });
 
   try {
@@ -1004,19 +972,9 @@ export async function runMatchmakingJob(
         notes: [...notes, 'pool too small'],
       };
 
-      await updateMatchmakingRunRecord(supabase, runId, {
-        status: 'completed',
-        pool_size: result.poolSize,
-        teams_formed: result.teamsFormed,
-        users_matched: result.usersMatched,
-        replacements_performed: result.replacementsPerformed,
-        notes: result.notes.join('; '),
-        finished_at: new Date().toISOString(),
-      });
-
       logInfo('matchmaking.job.completed', {
         triggerSource: options.triggerSource,
-        runId,
+        runId: options.runId ?? null,
         durationMs: Date.now() - startedAt,
         poolSize: result.poolSize,
         teamsFormed: result.teamsFormed,
@@ -1141,19 +1099,9 @@ export async function runMatchmakingJob(
       notes,
     };
 
-    await updateMatchmakingRunRecord(supabase, runId, {
-      status: 'completed',
-      pool_size: result.poolSize,
-      teams_formed: result.teamsFormed,
-      users_matched: result.usersMatched,
-      replacements_performed: result.replacementsPerformed,
-      notes: result.notes.join('; ') || null,
-      finished_at: new Date().toISOString(),
-    });
-
     logInfo('matchmaking.job.completed', {
       triggerSource: options.triggerSource,
-      runId,
+      runId: options.runId ?? null,
       durationMs: Date.now() - startedAt,
       poolSize: result.poolSize,
       teamsFormed: result.teamsFormed,
@@ -1165,15 +1113,9 @@ export async function runMatchmakingJob(
 
     return result;
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown matchmaking error';
-    await updateMatchmakingRunRecord(supabase, runId, {
-      status: 'failed',
-      error_message: message,
-      finished_at: new Date().toISOString(),
-    });
     logError('matchmaking.job.failed', error, {
       triggerSource: options.triggerSource,
-      runId,
+      runId: options.runId ?? null,
       durationMs: Date.now() - startedAt,
     });
     throw error;
