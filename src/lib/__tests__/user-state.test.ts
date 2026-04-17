@@ -30,8 +30,11 @@ describe('getUserState', () => {
     expect(getUserState(mockProfile, null, null, null)).toBe('needs_requeue');
   });
 
-  it('keeps assigned users without team membership in waiting_match', () => {
-    expect(getUserState(mockProfile, mockPoolAssigned, null, null)).toBe('waiting_match');
+  it('returns needs_requeue for assigned users whose team is gone (pool not reset after dissolve)', () => {
+    // Pool stuck at 'assigned' + no active team_members row (user was dissolved
+    // out). Routing them to /queue would be a dead end — engine filters for
+    // status='waiting'. /requeue has the button that flips pool back to waiting.
+    expect(getUserState(mockProfile, mockPoolAssigned, null, null)).toBe('needs_requeue');
   });
 
   it('prioritizes team membership over waiting pool status', () => {

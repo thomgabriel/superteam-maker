@@ -25,12 +25,13 @@ export function getUserState(
 ): UserState {
   if (!profile) return 'needs_profile';
   if (teamMember && team?.status === 'active') return 'team_active';
-  if (teamMember && team?.status === 'inactive') return 'needs_requeue';
   if (teamMember) return 'matched';
   if (poolEntry?.status === 'waiting') return 'waiting_match';
-  // Has profile but no pool entry and no active team member — dead end
-  if (!poolEntry) return 'needs_requeue';
-  return 'waiting_match';
+  // No active membership — user needs to (re)enter the pool.
+  // Covers: never-entered, pool deleted by neverVisited sweep, and the stuck
+  // `assigned`-but-team-dissolved case (team_members flipped to replaced/inactive
+  // without matchmaking_pool being reset).
+  return 'needs_requeue';
 }
 
 export function getRedirectPath(state: UserState, teamId?: string): string {
