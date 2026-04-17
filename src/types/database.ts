@@ -1,7 +1,12 @@
 export type MacroRole = 'engineering' | 'design' | 'business_gtm';
 export type Seniority = 'beginner' | 'junior' | 'mid' | 'senior';
 export type PoolStatus = 'waiting' | 'assigned';
-export type TeamStatus = 'forming' | 'pending_activation' | 'active' | 'inactive';
+export type TeamStatus =
+  | 'forming'
+  | 'pending_confirmation'
+  | 'pending_activation'
+  | 'active'
+  | 'inactive';
 export type MemberStatus = 'active' | 'inactive' | 'replaced';
 export type MatchmakingRunStatus = 'running' | 'completed' | 'failed';
 
@@ -83,11 +88,17 @@ export interface Team {
   round_number: number | null;
   leader_claimed_at: string | null;
   activation_deadline_at: string | null;
+  confirmation_deadline_at: string | null;
+  dissolution_reason: string | null;
   idea_title: string | null;
   idea_description: string | null;
   project_category: string | null;
   whatsapp_group_url: string | null;
   understaffed_at: string | null;
+  leader_dormant_at: string | null;
+  hackathon_id: string | null;
+  submission_url: string | null;
+  submitted_at: string | null;
   created_at: string;
   updated_at: string;
 }

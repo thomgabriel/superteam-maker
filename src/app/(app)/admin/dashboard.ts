@@ -29,8 +29,28 @@ interface AttentionInput {
   recentFailedRuns: MatchmakingRun[];
 }
 
+// Narrower than Team — matches the column selection the admin page actually
+// makes. Also includes post-F.2 fields (submission_url, submitted_at) which
+// aren't in the ambient Team interface yet.
+export interface AdminDashboardTeam
+  extends Pick<
+    Team,
+    | "id"
+    | "name"
+    | "status"
+    | "leader_id"
+    | "created_at"
+    | "updated_at"
+    | "activation_deadline_at"
+    | "idea_title"
+    | "whatsapp_group_url"
+  > {
+  submission_url: string | null;
+  submitted_at: string | null;
+}
+
 interface TeamRowsInput {
-  teams: Team[];
+  teams: AdminDashboardTeam[];
   activeMemberCounts: Record<string, number>;
   leaderNames: Record<string, string>;
   teamMembers: Record<
@@ -140,11 +160,14 @@ export function buildAdminTeamRows(input: TeamRowsInput) {
     leaderLabel: input.leaderNames[team.id] ?? 'Sem líder',
     whatsappLabel: team.whatsapp_group_url ? 'Configurado' : 'Pendente',
     ideaLabel: team.idea_title ? 'Definida' : 'Pendente',
+    submissionLabel: team.submission_url ? 'Enviada' : '—',
     updatedAtLabel: formatDateLabel(team.updated_at),
     detail: {
       deadlineLabel: formatDateLabel(team.activation_deadline_at),
       whatsappUrl: team.whatsapp_group_url,
       ideaTitle: team.idea_title,
+      submissionUrl: team.submission_url,
+      submittedAtLabel: formatDateLabel(team.submitted_at),
       members: (input.teamMembers[team.id] ?? []).map((member) => ({
         id: member.id,
         name: member.name,

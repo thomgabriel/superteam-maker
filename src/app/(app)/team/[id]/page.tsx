@@ -10,6 +10,13 @@ import { resolveAuthenticatedUserState } from '@/lib/user-state';
 import { Card } from '@/components/ui/card';
 import { logError } from '@/lib/monitoring';
 import { ReadyToggle } from '@/components/team/ready-toggle';
+import {
+  ConfirmationPanel,
+  type ConfirmationPanelMember,
+} from '@/components/team/confirmation-panel';
+import { CountdownBanner } from '@/components/team/countdown-banner';
+import { ConvocarLideranca } from '@/components/team/convocar-lideranca';
+import { LEADER_DORMANT_RECLAIM } from '@/lib/feature-flags';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,6 +25,7 @@ interface TeamPageMember {
   user_id: string;
   is_leader: boolean;
   is_ready?: boolean;
+  last_active_at?: string | null;
   profiles: {
     name: string;
     phone_number?: string;
@@ -145,10 +153,82 @@ export default async function TeamPage({
 
   const STATUS_LABELS: Record<string, string> = {
     forming: 'Preparando',
+    pending_confirmation: 'Confirmação do time',
     pending_activation: 'Primeiros passos',
     active: 'Ativo',
     inactive: 'Inativo',
   };
+
+  // Mutual confirmation window: render a dedicated panel so members opt in
+  // before the team advances to the leader-claim phase.
+  if (resolvedState.team.status === 'pending_confirmation') {
+    const { data: confirmations } = await db
+      .from('team_confirmations')
+      .select('user_id, confirmed')
+      .eq('team_id', teamId);
+
+    const rows = (confirmations ?? []) as Array<{
+      user_id: string;
+      confirmed: boolean;
+    }>;
+
+    const myDecisionRow = rows.find((r) => r.user_id === resolvedState.userId);
+    const myDecision: 'confirmed' | 'declined' | null = myDecisionRow
+      ? myDecisionRow.confirmed
+        ? 'confirmed'
+        : 'declined'
+      : null;
+
+    const initialConfirmed = rows.filter((r) => r.confirmed).length;
+    const initialDeclined = rows.filter((r) => !r.confirmed).length;
+
+    const panelMembers: ConfirmationPanelMember[] = (members as TeamPageMember[]).map(
+      (m) => ({
+        id: m.id,
+        user_id: m.user_id,
+        name: m.profiles.name,
+        primary_role: m.profiles.primary_role,
+        macro_role: m.profiles.macro_role,
+        seniority: m.profiles.seniority,
+      }),
+    );
+
+    return (
+      <main className="relative min-h-screen overflow-hidden px-4 py-8 sm:px-6 lg:px-8">
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute inset-x-0 top-0 h-[30rem] bg-[radial-gradient(circle_at_top,rgba(0,139,76,0.18),transparent_42%),radial-gradient(circle_at_80%_18%,rgba(255,210,63,0.10),transparent_26%),linear-gradient(180deg,#1b231d_0%,#162018_50%,#1b231d_100%)]" />
+          <Image
+            src="/brand/elements/morth-05.svg"
+            alt=""
+            width={320}
+            height={320}
+            className="absolute -left-12 top-24 opacity-12"
+          />
+        </div>
+
+        <div className="relative z-10 mx-auto w-full max-w-4xl space-y-6">
+          {memberLoadWarning && (
+            <Card className="rounded-[1.5rem] border-brand-yellow/24 bg-brand-yellow/10 px-5 py-4">
+              <p className="text-sm leading-7 text-brand-off-white/78">
+                {memberLoadWarning}
+              </p>
+            </Card>
+          )}
+
+          <ConfirmationPanel
+            teamId={teamId}
+            teamName={resolvedState.team.name}
+            members={panelMembers}
+            currentUserId={resolvedState.userId}
+            confirmationDeadline={resolvedState.team.confirmation_deadline_at ?? null}
+            myDecision={myDecision}
+            initialConfirmed={initialConfirmed}
+            initialDeclined={initialDeclined}
+          />
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="relative min-h-screen overflow-hidden px-4 py-8 sm:px-6 lg:px-8">
@@ -166,6 +246,40 @@ export default async function TeamPage({
             </p>
           </Card>
         )}
+
+        {resolvedState.team.status === 'pending_activation' &&
+          !resolvedState.team.leader_id &&
+          resolvedState.team.activation_deadline_at && (
+            <CountdownBanner
+              deadline={resolvedState.team.activation_deadline_at}
+              label="Tempo para assumir liderança"
+              description="Qualquer membro pode clicar em 'Assumir liderança'. Se ninguém assumir, o time se dissolve."
+            />
+          )}
+
+        {resolvedState.team.status === 'active' && resolvedState.team.understaffed_at && (
+          <CountdownBanner
+            deadline={new Date(
+              new Date(resolvedState.team.understaffed_at).getTime() + 24 * 60 * 60 * 1000,
+            )}
+            label="Time com vagas abertas"
+            description="Se um novo membro não entrar a tempo, o time pode ser desativado. Peça uma substituição nos próximos passos."
+            variant="yellow"
+          />
+        )}
+
+        {/* Flag-gated server-side so users don't see a teasing banner whose
+            action would return "not liberada ainda". */}
+        {resolvedState.team.status === 'active' &&
+          resolvedState.team.leader_dormant_at &&
+          !isLeader &&
+          LEADER_DORMANT_RECLAIM() && (
+            <ConvocarLideranca
+              teamId={teamId}
+              dormantSince={resolvedState.team.leader_dormant_at}
+            />
+          )}
+
         <section className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr] lg:items-start">
           <Card className="rounded-[2rem] border-brand-green/30 bg-[linear-gradient(180deg,rgba(27,35,29,0.96),rgba(27,35,29,0.72))] p-6 sm:p-7">
             <Image src="/brand/logo/symbol.svg" alt="" width={42} height={42} className="opacity-90" />
@@ -255,6 +369,7 @@ export default async function TeamPage({
                     githubUrl={member.profiles.github_url}
                     xUrl={member.profiles.x_url}
                     showPhone
+                    lastActiveAt={member.last_active_at}
                   />
                   {member.user_id === resolvedState.userId && !member.is_leader && resolvedState.team!.status === 'active' && (
                     <ReadyToggle teamId={teamId} isReady={member.is_ready ?? false} />

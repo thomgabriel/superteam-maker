@@ -5,7 +5,9 @@ import {
   createServiceRoleClient,
 } from "@/lib/supabase/server";
 import { isAdminUser } from "@/lib/admin";
+import { requireAdmin, NotAdminError } from "@/lib/admin/auth";
 import { RunMatchmakingButton } from "@/components/admin/run-matchmaking-button";
+import { TeamLifecycleControls } from "@/components/admin/team-lifecycle-controls";
 import type { MatchmakingRun, Team } from "@/types/database";
 import { Card } from "@/components/ui/card";
 import {
@@ -44,6 +46,8 @@ interface TeamSummaryRow {
   activation_deadline_at: string | null;
   idea_title: string | null;
   whatsapp_group_url: string | null;
+  submission_url: string | null;
+  submitted_at: string | null;
 }
 
 
@@ -77,6 +81,8 @@ function statusLabel(status: Team["status"] | MatchmakingRun["status"]) {
   switch (status) {
     case "active":
       return "Ativo";
+    case "pending_confirmation":
+      return "Confirmação";
     case "pending_activation":
       return "Pendente";
     case "inactive":
@@ -97,7 +103,11 @@ function statusClass(status: string) {
     return "border-brand-emerald/30 bg-brand-emerald/12 text-brand-emerald";
   }
 
-  if (status === "pending_activation" || status === "failed") {
+  if (
+    status === "pending_activation" ||
+    status === "pending_confirmation" ||
+    status === "failed"
+  ) {
     return "border-brand-yellow/30 bg-brand-yellow/10 text-brand-yellow";
   }
 
@@ -105,9 +115,12 @@ function statusClass(status: string) {
 }
 
 const TEAM_GRID_COLS =
-  "lg:grid-cols-[minmax(14rem,1.5fr)_minmax(7rem,0.8fr)_minmax(5rem,0.5fr)_minmax(8rem,0.9fr)_minmax(8rem,0.8fr)_minmax(7rem,0.7fr)_minmax(7rem,0.7fr)_minmax(8rem,0.8fr)]";
+  "lg:grid-cols-[minmax(14rem,1.5fr)_minmax(7rem,0.8fr)_minmax(5rem,0.5fr)_minmax(8rem,0.9fr)_minmax(8rem,0.8fr)_minmax(7rem,0.7fr)_minmax(7rem,0.7fr)_minmax(7rem,0.7fr)_minmax(8rem,0.8fr)]";
 
 async function getOrphanedUsersCount(db: AdminDb) {
+  // Admin gate inside each helper — callers who skip the page-level guard still hit this.
+  await requireAdmin();
+
   const [
     { data: profiles },
     { data: users },
@@ -137,6 +150,8 @@ async function getOrphanedUsersCount(db: AdminDb) {
 }
 
 async function getDashboardData(statusFilter: Team["status"] | "all") {
+  await requireAdmin();
+
   const db = await createServiceRoleClient();
 
   const [
@@ -154,7 +169,7 @@ async function getDashboardData(statusFilter: Team["status"] | "all") {
     db
       .from("teams")
       .select("*", { count: "exact", head: true })
-      .eq("status", "pending_activation"),
+      .in("status", ["pending_activation", "pending_confirmation"]),
     db
       .from("teams")
       .select("*", { count: "exact", head: true })
@@ -187,7 +202,7 @@ async function getDashboardData(statusFilter: Team["status"] | "all") {
   let teamsQuery = db
     .from("teams")
     .select(
-      "id, name, status, leader_id, created_at, updated_at, activation_deadline_at, idea_title, whatsapp_group_url",
+      "id, name, status, leader_id, created_at, updated_at, activation_deadline_at, idea_title, whatsapp_group_url, submission_url, submitted_at",
     )
     .order("updated_at", { ascending: false })
     .limit(18);
@@ -296,7 +311,7 @@ async function getDashboardData(statusFilter: Team["status"] | "all") {
       []) as unknown as WaitingUserRow[],
     recentRuns: (recentRuns ?? []) as MatchmakingRun[],
     teamRows: buildAdminTeamRows({
-      teams: recentTeams as Team[],
+      teams: recentTeams,
       activeMemberCounts,
       leaderNames: leaderNameByTeamId,
       teamMembers: teamMembersByTeamId,
@@ -334,12 +349,21 @@ export default async function AdminPage({
   const statusFilter: Team["status"] | "all" =
     status === "active" ||
     status === "pending_activation" ||
+    status === "pending_confirmation" ||
     status === "inactive" ||
     status === "forming"
       ? status
       : "all";
 
-  const dashboard = await getDashboardData(statusFilter);
+  let dashboard: Awaited<ReturnType<typeof getDashboardData>>;
+  try {
+    dashboard = await getDashboardData(statusFilter);
+  } catch (error) {
+    if (error instanceof NotAdminError) {
+      redirect("/queue");
+    }
+    throw error;
+  }
 
   const normalizedWaitingUsers: NormalizedWaitingUser[] = [];
   for (const entry of dashboard.oldestWaitingUsers) {
@@ -526,6 +550,7 @@ export default async function AdminPage({
               {(
                 [
                   ["all", "Todos"],
+                  ["pending_confirmation", "Confirmação"],
                   ["pending_activation", "Pendentes"],
                   ["active", "Ativos"],
                   ["inactive", "Inativos"],
@@ -561,6 +586,7 @@ export default async function AdminPage({
               <div>Líder</div>
               <div>WhatsApp</div>
               <div>Ideia</div>
+              <div>Submissão</div>
               <div>Atualizado</div>
               <div className="text-right">Ação</div>
             </div>
@@ -599,6 +625,9 @@ export default async function AdminPage({
                           <div className="text-brand-off-white/74">
                             {team.ideaLabel}
                           </div>
+                          <div className="text-brand-off-white/74">
+                            {team.submissionLabel}
+                          </div>
                           <div className="text-brand-off-white/56">
                             {team.updatedAtLabel}
                           </div>
@@ -613,7 +642,7 @@ export default async function AdminPage({
                         </summary>
 
                         <div className="border-t border-brand-green/16 px-4 py-5">
-                          <div className="grid gap-4 lg:grid-cols-3">
+                          <div className="grid gap-4 lg:grid-cols-4">
                             <Card className="rounded-[1.25rem] border-brand-green/16 bg-brand-dark-green/56 p-4">
                               <p className="text-xs uppercase tracking-[0.16em] text-brand-off-white/42">
                                 Deadline
@@ -650,6 +679,47 @@ export default async function AdminPage({
                                   "Ainda sem ideia definida"}
                               </p>
                             </Card>
+                            <Card className="rounded-[1.25rem] border-brand-green/16 bg-brand-dark-green/56 p-4">
+                              <p className="text-xs uppercase tracking-[0.16em] text-brand-off-white/42">
+                                Submissão
+                              </p>
+                              {team.detail.submissionUrl ? (
+                                <div className="mt-2 space-y-1">
+                                  <a
+                                    href={team.detail.submissionUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex max-w-full truncate text-sm text-brand-emerald hover:text-brand-off-white"
+                                  >
+                                    Abrir link
+                                  </a>
+                                  <p className="text-[11px] text-brand-off-white/48">
+                                    Enviado em {team.detail.submittedAtLabel}
+                                  </p>
+                                </div>
+                              ) : (
+                                <p className="mt-2 text-sm text-brand-off-white/72">
+                                  —
+                                </p>
+                              )}
+                            </Card>
+                          </div>
+
+                          <div className="mt-5 flex flex-col gap-3 rounded-[1.25rem] border border-brand-yellow/24 bg-brand-yellow/6 p-4">
+                            <div>
+                              <p className="text-xs uppercase tracking-[0.16em] text-brand-yellow/82">
+                                Ações de suporte
+                              </p>
+                              <p className="mt-1 text-xs leading-5 text-brand-off-white/56">
+                                Use apenas quando o fluxo natural travou (e-mail não chegou, líder sumiu etc.).
+                                O uso é registrado no audit trail.
+                              </p>
+                            </div>
+                            <TeamLifecycleControls
+                              teamId={team.id}
+                              teamName={team.name}
+                              status={team.status}
+                            />
                           </div>
 
                           <div className="mt-5">

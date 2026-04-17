@@ -8,6 +8,7 @@ import type { Profile } from "@/types/database";
 import Link from "next/link";
 import Image from "next/image";
 import registeringGif from "@/app/registering.gif";
+import { maskPhoneNumber } from "@/lib/phone-mask";
 
 interface QueueStatusProps {
   userId: string;
@@ -15,6 +16,7 @@ interface QueueStatusProps {
   interests: string[];
   poolEntryCreatedAt: string | null;
   poolCount: number | null;
+  etaLabel: string | null;
 }
 
 function formatRelativeTime(dateString: string): string {
@@ -40,6 +42,7 @@ export function QueueStatus({
   interests,
   poolEntryCreatedAt,
   poolCount,
+  etaLabel,
 }: QueueStatusProps) {
   const router = useRouter();
   const [tipIndex, setTipIndex] = useState(0);
@@ -174,11 +177,32 @@ export function QueueStatus({
               {poolCount} {poolCount === 1 ? "pessoa" : "pessoas"} na fila agora
             </span>
           )}
-          {poolCount !== null && poolEntryCreatedAt && (
-            <span className="text-brand-off-white/22">·</span>
+          {etaLabel && (
+            <>
+              <span className="text-brand-off-white/22">·</span>
+              <span>{etaLabel}</span>
+            </>
           )}
           {poolEntryCreatedAt && (
-            <span>Você entrou {formatRelativeTime(poolEntryCreatedAt)}</span>
+            <>
+              <span className="text-brand-off-white/22">·</span>
+              <span>Você entrou {formatRelativeTime(poolEntryCreatedAt)}</span>
+            </>
+          )}
+        </div>
+
+        {/* Connection status indicator (E.3) */}
+        <div className="mt-4 flex justify-center">
+          {connectionMode === "realtime" ? (
+            <span className="inline-flex items-center gap-2 rounded-full border border-brand-emerald/24 bg-brand-emerald/8 px-3 py-1 text-[11px] uppercase tracking-[0.18em] text-brand-emerald/80">
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-brand-emerald" />
+              Ao vivo
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-2 rounded-full border border-brand-yellow/28 bg-brand-yellow/8 px-3 py-1 text-[11px] uppercase tracking-[0.18em] text-brand-yellow">
+              <span className="h-1.5 w-1.5 rounded-full bg-brand-yellow" />
+              Atualizando a cada 20s
+            </span>
           )}
         </div>
 
@@ -195,7 +219,7 @@ export function QueueStatus({
               {profile.phone_number && (
                 <>
                   <span className="text-brand-off-white/18">·</span>
-                  <span>Tel: ****{profile.phone_number.slice(-4)}</span>
+                  <span>Tel: {maskPhoneNumber(profile.phone_number)}</span>
                 </>
               )}
               {interests.length > 0 && (
@@ -255,12 +279,10 @@ export function QueueStatus({
 
         <Card className="mt-8 min-h-[5rem] rounded-[1.5rem] border-brand-green/24 bg-brand-dark-green/64 px-6 py-5">
           <p className="text-xs uppercase tracking-[0.18em] text-brand-off-white/42">
-            {connectionMode === "realtime" ? "Agora" : "Conexão alternativa"}
+            Enquanto você espera
           </p>
           <p className="mt-3 text-sm leading-7 text-brand-off-white/72 transition-opacity">
-            {connectionMode === "realtime"
-              ? TIPS[tipIndex]
-              : "Estamos verificando seu status automaticamente."}
+            {TIPS[tipIndex]}
           </p>
         </Card>
       </div>

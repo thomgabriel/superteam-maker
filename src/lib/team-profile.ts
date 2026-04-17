@@ -13,6 +13,8 @@ type TeamProfileFieldResult =
         idea_description?: string | null;
         project_category?: string | null;
         whatsapp_group_url?: string | null;
+        submission_url?: string | null;
+        submitted_at?: string | null;
       };
     }
   | {
@@ -42,6 +44,8 @@ export function sanitizeTeamProfileUpdate(
     idea_description?: string | null;
     project_category?: string | null;
     whatsapp_group_url?: string | null;
+    submission_url?: string | null;
+    submitted_at?: string | null;
   } = {};
 
   const name = trimString(input.name);
@@ -108,6 +112,28 @@ export function sanitizeTeamProfileUpdate(
       }
     } else {
       updates.whatsapp_group_url = null;
+    }
+  }
+
+  const submissionUrl = normalizeOptionalString(input.submission_url);
+  if (submissionUrl !== undefined) {
+    if (submissionUrl) {
+      if (submissionUrl.length > 500) {
+        return { ok: false, message: 'Link de submissão muito longo.' };
+      }
+      try {
+        const parsed = new URL(submissionUrl);
+        if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
+          return { ok: false, message: 'Use um link http(s) válido para a submissão.' };
+        }
+        updates.submission_url = parsed.toString();
+        updates.submitted_at = new Date().toISOString();
+      } catch {
+        return { ok: false, message: 'Use um link válido para a submissão.' };
+      }
+    } else {
+      updates.submission_url = null;
+      updates.submitted_at = null;
     }
   }
 

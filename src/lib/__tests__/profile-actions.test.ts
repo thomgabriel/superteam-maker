@@ -60,7 +60,7 @@ describe('createProfile', () => {
     from.mockReset();
   });
 
-  it('still redirects to the queue when attribution logging fails after the profile is created', async () => {
+  it('still redirects to /profile/enhance when attribution logging fails after the profile is created', async () => {
     persistAttributionForUser.mockRejectedValue(new Error('attribution offline'));
 
     await expect(
@@ -75,7 +75,7 @@ describe('createProfile', () => {
         years_experience: 4,
         interests: ['DeFi'],
       }),
-    ).rejects.toThrow('REDIRECT:/queue');
+    ).rejects.toThrow('REDIRECT:/profile/enhance');
 
     expect(logError).toHaveBeenCalledWith(
       'profile.create.attribution_failed',
@@ -84,7 +84,7 @@ describe('createProfile', () => {
     );
   });
 
-  it('still redirects to the queue when analytics logging fails after the profile is created', async () => {
+  it('still redirects to /profile/enhance when analytics logging fails after the profile is created', async () => {
     trackEvent.mockRejectedValueOnce(new Error('analytics offline'));
 
     await expect(
@@ -99,7 +99,7 @@ describe('createProfile', () => {
         years_experience: 4,
         interests: ['DeFi'],
       }),
-    ).rejects.toThrow('REDIRECT:/queue');
+    ).rejects.toThrow('REDIRECT:/profile/enhance');
 
     expect(logError).toHaveBeenCalledWith(
       'profile.create.track_failed',

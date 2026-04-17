@@ -15,6 +15,27 @@ interface MemberCardProps {
   githubUrl?: string | null;
   xUrl?: string | null;
   showPhone?: boolean;
+  lastActiveAt?: string | null;
+}
+
+function formatLastActive(iso: string): string {
+  const diffMs = Date.now() - new Date(iso).getTime();
+  const minutes = Math.floor(diffMs / 60000);
+  if (minutes < 2) return 'ativo agora';
+  if (minutes < 60) return `visto há ${minutes}min`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `visto há ${hours}h`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `visto há ${days}d`;
+  return `visto há ${Math.floor(days / 7)}sem`;
+}
+
+function activityTone(iso: string | null | undefined): string {
+  if (!iso) return 'text-brand-off-white/32';
+  const hours = (Date.now() - new Date(iso).getTime()) / (60 * 60 * 1000);
+  if (hours < 12) return 'text-brand-emerald/80';
+  if (hours < 48) return 'text-brand-yellow/80';
+  return 'text-red-300/80';
 }
 
 export function MemberCard({
@@ -28,6 +49,7 @@ export function MemberCard({
   githubUrl,
   xUrl,
   showPhone = false,
+  lastActiveAt,
 }: MemberCardProps) {
   const whatsappUrl = phoneNumber
     ? `https://wa.me/${phoneNumber.replace(/\D/g, "")}`
@@ -53,6 +75,11 @@ export function MemberCard({
           <p className="mt-1 text-sm leading-6 text-brand-off-white/68">
             {specificRole}
           </p>
+          {lastActiveAt && (
+            <p className={`mt-1 text-xs font-medium ${activityTone(lastActiveAt)}`}>
+              {formatLastActive(lastActiveAt)}
+            </p>
+          )}
         </div>
         {isLeader && (
           <span className="rounded-full border border-brand-yellow/30 bg-brand-yellow/12 px-3 py-1 text-xs font-medium uppercase tracking-[0.14em] text-brand-yellow">
@@ -60,7 +87,21 @@ export function MemberCard({
           </span>
         )}
         {!isLeader && isReady !== undefined && (
-          <span className={`h-3 w-3 rounded-full ${isReady ? 'bg-brand-emerald' : 'bg-brand-off-white/20'}`} title={isReady ? 'Pronto' : 'Aguardando'} />
+          isReady ? (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-brand-emerald/30 bg-brand-emerald/12 px-3 py-1 text-xs font-medium uppercase tracking-[0.14em] text-brand-emerald">
+              <svg viewBox="0 0 16 16" className="h-3 w-3 fill-current" aria-hidden="true">
+                <path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z" />
+              </svg>
+              Pronto
+            </span>
+          ) : (
+            <span
+              aria-label="Membro aguardando ficar pronto"
+              className="rounded-full border border-brand-off-white/28 bg-brand-off-white/8 px-3 py-1 text-xs font-medium uppercase tracking-[0.14em] text-brand-off-white/72"
+            >
+              Aguardando
+            </span>
+          )
         )}
       </div>
 
